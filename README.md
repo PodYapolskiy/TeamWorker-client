@@ -1,8 +1,5 @@
 # TeamWorker Client
 
-Клиентская часть мобильного приложения _TeamWorker_, которое выступило нашим проектом с [Дмитрием Егоровым][dimaegorov].
+Клиентская часть мобильного приложения _TeamWorker_, которое выступило нашим проектом с [Дмитрием Егоровым](https://github.com/Pixel-Warrior).
 
-## Импользование
-
-[//]: #
-[dimaegorov]: [https://gitlab.com/Pwarrior](https://gitlab.com/Pwarrior)
+## Использование
