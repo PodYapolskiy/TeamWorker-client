@@ -4,7 +4,6 @@ kivy.require('2.0.0')
 # Импорт из kivy
 from kivy.lang import Builder
 from kivy.clock import Clock
-from kivy.graphics import *  #?
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.properties import ObjectProperty, StringProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
@@ -25,8 +24,7 @@ from kivymd.uix.selectioncontrol import MDCheckbox
 from kivymd.uix.snackbar import Snackbar
 
 # Импорт своих модулей из пакета project
-from project import sign, log, push_tasks_info, get_tasks_info, get_team_name, get_team_users
-from project import generate_string
+from project import sign, log, push_tasks_info, get_tasks_info, get_team_name, get_team_users, generate_string
 
 # Импорт других модулей
 import json
@@ -42,6 +40,34 @@ delete_if_exit = True
 roles = []
 val1, val2, val3 = False, False, False
 
+'''
+class Singleton(type):
+	"""Метакласс. Паттерн проектирования 'одиночка'."""
+	# def __init__(cls, *args, **kwargs):
+	# 	super().__init__(*args, **kwargs)
+	_instance = None
+	
+	def __call__(cls, *args, **kwargs):
+		if cls._instance is None:
+			cls._instance = super().__call__(*args, **kwargs)
+		return cls._instance
+
+
+class Logger(metaclass=Singleton):
+	"""Действующий авторизованный профиль."""
+	login = None  # Логин авторизованного пользователя
+	team_name = None  # Название команды #! Чтобы не обращаться каждый раз к серверу.
+
+	def set_login(self):
+		pass
+
+	def set_team(self):
+		pass
+
+
+account = Logger()  # Авторизованный аккаунт на клиенте. По умолчанию None
+'''
+
 # Переменная, указывающая на login пользователя, данной, конкретной сессии
 account_login = None
 
@@ -49,7 +75,7 @@ account_login = None
 class StartScreen(Screen): # Начальный экран
 
 	def define_screens(self):
-		""" Создаёт ссылки на экраны """
+		"""Создаёт ссылки на экраны"""
 		global registration_screen_link
 		global sign_in_screen_link
 		global role_edit_screen_link
@@ -173,9 +199,10 @@ class SignInScreen(Screen):  # Экран регистрации
 		else:
 			Snackbar(text="Не удалось передать данные на сервер", font_size="18dp").open()
 
-			#! self.manager.transition.direction = 'down'
-			#! self.manager.transition.duration = 0.5
-			#! self.manager.current = 'info_screen'
+			if test:
+				self.manager.transition.direction = 'down'
+				self.manager.transition.duration = 0.5
+				self.manager.current = 'info_screen'
 
 	def edit_team_name(self):
 		""" Создаёт диалоговое окно """
@@ -260,10 +287,10 @@ class LogInScreen(Screen):  # Экран входa
 		else:
 			Snackbar(text="Ошибка входа", font_size="18dp").open()
 			
-			#?
-			self.manager.transition.direction = 'down'
-			self.manager.transition.duration = 0.5
-			self.manager.current = 'main_screen'
+			if test:
+				self.manager.transition.direction = 'down'
+				self.manager.transition.duration = 0.5
+				self.manager.current = 'main_screen'
 
 
 class RegistrationScreen(Screen):  # Экран регистрации пользователя
@@ -771,4 +798,9 @@ class MyApp(MDApp):
 
 
 if __name__ == '__main__':
+	import sys
+	test = False
+	if "-t" in sys.argv or "--test" in sys.argv:
+		test = True
+
 	MyApp().run()
