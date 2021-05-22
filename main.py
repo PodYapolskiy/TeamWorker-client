@@ -295,7 +295,8 @@ class LogInScreen(Screen):
 				self.manager.current = 'main_screen'
 
 
-class RegistrationScreen(Screen):  # Экран регистрации пользователя
+class RegistrationScreen(Screen):
+	"""Экран регистрации пользователя"""
 
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
