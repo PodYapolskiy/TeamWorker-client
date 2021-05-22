@@ -72,8 +72,8 @@ account = Logger()  # Авторизованный аккаунт на клие�
 account_login = None
 
 
-class StartScreen(Screen): # Начальный экран
-
+class StartScreen(Screen):
+	"""Начальный экран"""
 	def define_screens(self):
 		"""Создаёт ссылки на экраны"""
 		global registration_screen_link
@@ -91,7 +91,8 @@ class StartScreen(Screen): # Начальный экран
 		task_members_screen_link = self.manager.get_screen('task_members_screen')
 
 
-class SignInScreen(Screen):  # Экран регистрации
+class SignInScreen(Screen):
+	"""Экран регистрации"""
 	dialog = None
 
 	def __init__(self, **kwargs):
@@ -100,8 +101,8 @@ class SignInScreen(Screen):  # Экран регистрации
 		self.ids.container.children[user_box_id].text = "<Введите Ваше имя>"
 		self.ids.container.children[user_box_id].secondary_text = "Капитан"
 
-	# Класс карточки с пользователем ( и в будующем возможно задания )
 	class SwipeToDeleteItem(MDCardSwipe, Screen):
+		"""Класс карточки с пользователем"""
 		text = StringProperty()
 		secondary_text = StringProperty()
 
@@ -243,7 +244,8 @@ class SignInScreen(Screen):  # Экран регистрации
 				self.ids.toolbar.title = obj.text
 		self.dialog.dismiss()
 
-	def clear_fields(self): # Функция, меняющая все тектсы в меню регистрации
+	def clear_fields(self):
+		"""Функция, меняющая все тексты в меню регистрации"""
 		print("<method> clear_fields")
 		registration_screen_link = self.manager.get_screen('registration_screen')
 		registration_screen_link.ids.name.text = ""
@@ -251,7 +253,7 @@ class SignInScreen(Screen):  # Экран регистрации
 		registration_screen_link.ids.label.text = "Регистрация пользователя"
 		registration_screen_link.ids.button.text = "[color=#ffffff][b]ЗАРЕГИСТРИРОВАТЬ\nПОЛЬЗОВАТЕЛЯ[/b][/color]"
 
-		registration_screen_link.ids.warning_label.text = "" # Текст таблички, с сообщением об отсутствии текста в полях
+		registration_screen_link.ids.warning_label.text = ""  # Текст таблички, с сообщением об отсутствии текста в полях
 
 	def create_user_box(self):
 		print("<method> create_user_box")
@@ -264,8 +266,8 @@ class SignInScreen(Screen):  # Экран регистрации
 		delete_if_exit = True
 
 
-class LogInScreen(Screen):  # Экран входa
-
+class LogInScreen(Screen):
+	"""Экран входa"""
 	login = ObjectProperty()
 	password = ObjectProperty()
 
@@ -357,9 +359,9 @@ class RegistrationScreen(Screen):  # Экран регистрации поль�
 
 
 class MainScreen(Screen):
-
-	# Класс карточки с пользователем ( и в будующем возможно задания )
+	"""Главный экран"""
 	class TaskCard(MDCardSwipe, Screen):
+		"""Класс карточки с заданием"""
 		text = StringProperty()
 		secondary_text = StringProperty()
 		tertiary_text = StringProperty()
@@ -619,10 +621,6 @@ class RoleEditScreen(Screen):
 				"on_release": lambda text=f"{self.ids.role_name.text}": registration_screen_link.on_menu_action(text)
 			}
 			menu_items.insert(len(menu_items)-1, item)
-			
-			print("roles")
-			for role in roles:
-				print(f"\t{role}")
 
 			registration_screen_link.menu = MDDropdownMenu(
 				caller=registration_screen_link.ids.role,
