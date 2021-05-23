@@ -452,7 +452,7 @@ class MainScreen(Screen):
 		# Если с LogInScreen, то тот, который вошёл
 
 		global tasks
-
+		
 		team_name = get_team_name(account_login)
 		if team_name != '':
 			self.ids.toolbar.title = team_name
