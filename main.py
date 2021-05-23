@@ -168,7 +168,7 @@ class SignInScreen(Screen):
 			user_dict = {}  # Временный словарь для каждой итерации
 
 			# Генерируем значения логина и пароля пользователя
-			user_login = generate_string(unique=False)  #!!!
+			user_login = generate_string(unique=True)  # (unique=False)  #!!!
 			user_dict['user_login'] = user_login
 			user_dict['user_password'] = generate_string(unique=False)
 
@@ -431,6 +431,17 @@ class MainScreen(Screen):
 			push_tasks_info(tasks)
 
 	def on_enter(self):
+		"""
+			tasks = [
+				{
+					"task_text":f"Сосать бибу {i}",
+					"task_user_logins":["huesos1login","huesos2login"],
+					"task_user_names":["хуесос 1", "Хуесос 2"],
+					"task_deadline":"21 апреля, 2021",
+					"task_is_done":0
+				}  for i in range(10)
+			]
+		"""
 		print("<method> on_enter")
 		global account_login
 
@@ -439,42 +450,37 @@ class MainScreen(Screen):
 		# Если с LogInScreen, то тот, который вошёл
 
 		global tasks
-		#tasks = [
-		#	{
-		#		"task_text":f"Сосать бибу {i}",
-		#		"task_users_login":["huesos1login","huesos2login"],
-		#		"task_users":["хуесос 1", "Хуесос 2"],
-		#		"task_deadline":"21 апреля, 2021",
-		#		"task_is_done":0
-		#	}  for i in range(10)
-		#]
-		self.ids.toolbar.title = get_team_name(account_login)
+		
+		team_name = get_team_name(account_login)
+		if team_name != '':
+			self.ids.toolbar.title = team_name
+		else: 
+			# Если произошла ошибка в получении названия
+			self.ids.toolbar.title = "<ОШИБКА>"
+
 		tasks = get_tasks_info(account_login)
+		print(f"tasks: {tasks}")
 
 		self.ids.container.clear_widgets()
 		self.display_tasks()
 
 	def display_tasks(self):
-		""" Обновляет список задач """
+		"""Обновляет список задач"""
 		print ("<method> display_tasks")
 		global tasks
 
-		for task in tasks:
-			users = ""
-			mark = ", "
-			itter = 1
+		for task in tasks['tasks_data']:
+			users = []  # Исполнители задачи
 
-			for user in task["task_users"]:
-				if itter >= len(task["task_users"]):
-					mark = ""
+			# Добавляем исполняющих задачу
+			for user in task["task_user_names"]:
+				users.append(user)
 
-				itter += 1
-				users += user + mark
-
+			# Добавляем карточку с заданием
 			self.ids.container.add_widget(
 				self.TaskCard(
 						text=task["task_text"],
-						secondary_text=users,
+						secondary_text=', '.join(users),  # Строка исполнителей с разделителем ', '
 						tertiary_text=str(task["task_deadline"]),
 						active=bool(task["task_is_done"])
 				)
