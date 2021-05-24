@@ -4,7 +4,6 @@ kivy.require('2.0.0')
 # Импорт из kivy
 from kivy.lang import Builder
 from kivy.clock import Clock
-from kivy.graphics import *  #?
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.properties import ObjectProperty, StringProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
@@ -25,8 +24,7 @@ from kivymd.uix.selectioncontrol import MDCheckbox
 from kivymd.uix.snackbar import Snackbar
 
 # Импорт своих модулей из пакета project
-from project import sign, log, push_tasks_info, get_tasks_info, get_team_name, get_team_users
-from project import generate_string
+from project import sign, log, push_tasks_info, get_tasks_info, get_team_name, get_team_users, generate_string
 
 # Импорт других модулей
 import json
@@ -42,14 +40,42 @@ delete_if_exit = True
 roles = []
 val1, val2, val3 = False, False, False
 
+'''
+class Singleton(type):
+	"""Метакласс. Паттерн проектирования 'одиночка'."""
+	# def __init__(cls, *args, **kwargs):
+	# 	super().__init__(*args, **kwargs)
+	_instance = None
+	
+	def __call__(cls, *args, **kwargs):
+		if cls._instance is None:
+			cls._instance = super().__call__(*args, **kwargs)
+		return cls._instance
+
+
+class Logger(metaclass=Singleton):
+	"""Действующий авторизованный профиль."""
+	login = None  # Логин авторизованного пользователя
+	team_name = None  # Название команды #! Чтобы не обращаться каждый раз к серверу.
+
+	def set_login(self):
+		pass
+
+	def set_team(self):
+		pass
+
+
+account = Logger()  # Авторизованный аккаунт на клиенте. По умолчанию None
+'''
+
 # Переменная, указывающая на login пользователя, данной, конкретной сессии
 account_login = None
 
 
-class StartScreen(Screen): # Начальный экран
-
+class StartScreen(Screen):
+	"""Начальный экран"""
 	def define_screens(self):
-		""" Создаёт ссылки на экраны """
+		"""Создаёт ссылки на экраны"""
 		global registration_screen_link
 		global sign_in_screen_link
 		global role_edit_screen_link
@@ -65,7 +91,8 @@ class StartScreen(Screen): # Начальный экран
 		task_members_screen_link = self.manager.get_screen('task_members_screen')
 
 
-class SignInScreen(Screen):  # Экран регистрации
+class SignInScreen(Screen):
+	"""Экран регистрации"""
 	dialog = None
 
 	def __init__(self, **kwargs):
@@ -74,16 +101,19 @@ class SignInScreen(Screen):  # Экран регистрации
 		self.ids.container.children[user_box_id].text = "<Введите Ваше имя>"
 		self.ids.container.children[user_box_id].secondary_text = "Капитан"
 
-	# Класс карточки с пользователем ( и в будующем возможно задания )
 	class SwipeToDeleteItem(MDCardSwipe, Screen):
+		"""Класс карточки с пользователем"""
 		text = StringProperty()
 		secondary_text = StringProperty()
 
-		def change_screen(self, instance):  # функция, меняющая тексты на экране регистрации пользователя
+		def change_screen(self, instance):
+			"""Функция, меняющая тексты на экране регистрации пользователя"""
 			print("<method> change_screen")
+
 			global user_box_id
 			global delete_if_exit
 			global registration_screen_link
+
 			self.set_user_box_id(instance)
 			registration_screen_link.ids.name.text = instance.text
 			registration_screen_link.ids.role.text = instance.secondary_text
@@ -141,7 +171,7 @@ class SignInScreen(Screen):  # Экран регистрации
 			user_dict = {}  # Временный словарь для каждой итерации
 
 			# Генерируем значения логина и пароля пользователя
-			user_login = generate_string(unique=False)  #!!!
+			user_login = generate_string(unique=True)  # (unique=False)  #!!!
 			user_dict['user_login'] = user_login
 			user_dict['user_password'] = generate_string(unique=False)
 
@@ -173,9 +203,10 @@ class SignInScreen(Screen):  # Экран регистрации
 		else:
 			Snackbar(text="Не удалось передать данные на сервер", font_size="18dp").open()
 
-			#! self.manager.transition.direction = 'down'
-			#! self.manager.transition.duration = 0.5
-			#! self.manager.current = 'info_screen'
+			if test:
+				self.manager.transition.direction = 'down'
+				self.manager.transition.duration = 0.5
+				self.manager.current = 'info_screen'
 
 	def edit_team_name(self):
 		""" Создаёт диалоговое окно """
@@ -216,7 +247,8 @@ class SignInScreen(Screen):  # Экран регистрации
 				self.ids.toolbar.title = obj.text
 		self.dialog.dismiss()
 
-	def clear_fields(self): # Функция, меняющая все тектсы в меню регистрации
+	def clear_fields(self):
+		"""Функция, меняющая все тексты в меню регистрации"""
 		print("<method> clear_fields")
 		registration_screen_link = self.manager.get_screen('registration_screen')
 		registration_screen_link.ids.name.text = ""
@@ -224,7 +256,7 @@ class SignInScreen(Screen):  # Экран регистрации
 		registration_screen_link.ids.label.text = "Регистрация пользователя"
 		registration_screen_link.ids.button.text = "[color=#ffffff][b]ЗАРЕГИСТРИРОВАТЬ\nПОЛЬЗОВАТЕЛЯ[/b][/color]"
 
-		registration_screen_link.ids.warning_label.text = "" # Текст таблички, с сообщением об отсутствии текста в полях
+		registration_screen_link.ids.warning_label.text = ""  # Текст таблички, с сообщением об отсутствии текста в полях
 
 	def create_user_box(self):
 		print("<method> create_user_box")
@@ -237,8 +269,8 @@ class SignInScreen(Screen):  # Экран регистрации
 		delete_if_exit = True
 
 
-class LogInScreen(Screen):  # Экран входa
-
+class LogInScreen(Screen):
+	"""Экран входa"""
 	login = ObjectProperty()
 	password = ObjectProperty()
 
@@ -260,13 +292,14 @@ class LogInScreen(Screen):  # Экран входa
 		else:
 			Snackbar(text="Ошибка входа", font_size="18dp").open()
 			
-			#?
-			self.manager.transition.direction = 'down'
-			self.manager.transition.duration = 0.5
-			self.manager.current = 'main_screen'
+			if test:
+				self.manager.transition.direction = 'down'
+				self.manager.transition.duration = 0.5
+				self.manager.current = 'main_screen'
 
 
-class RegistrationScreen(Screen):  # Экран регистрации пользователя
+class RegistrationScreen(Screen):
+	"""Экран регистрации пользователя"""
 
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
@@ -330,9 +363,9 @@ class RegistrationScreen(Screen):  # Экран регистрации поль�
 
 
 class MainScreen(Screen):
-
-	# Класс карточки с пользователем ( и в будующем возможно задания )
+	"""Главный экран"""
 	class TaskCard(MDCardSwipe, Screen):
+		"""Класс карточки с заданием"""
 		text = StringProperty()
 		secondary_text = StringProperty()
 		tertiary_text = StringProperty()
@@ -342,7 +375,6 @@ class MainScreen(Screen):
 			pass
 
 		def change_screen(self, instance):
-			""" Функция, меняющая тексты на экране регистрации пользователя """
 			print("<method> change_screen")
 
 			global task_box_id
@@ -401,6 +433,17 @@ class MainScreen(Screen):
 			push_tasks_info(tasks)
 
 	def on_enter(self):
+		"""
+			tasks = [
+				{
+					"task_text":f"Сосать бибу {i}",
+					"task_user_logins":["huesos1login","huesos2login"],
+					"task_user_names":["хуесос 1", "Хуесос 2"],
+					"task_deadline":"21 апреля, 2021",
+					"task_is_done":0
+				}  for i in range(10)
+			]
+		"""
 		print("<method> on_enter")
 		global account_login
 
@@ -409,42 +452,37 @@ class MainScreen(Screen):
 		# Если с LogInScreen, то тот, который вошёл
 
 		global tasks
-		#tasks = [
-		#	{
-		#		"task_text":f"Сосать бибу {i}",
-		#		"task_users_login":["huesos1login","huesos2login"],
-		#		"task_users":["хуесос 1", "Хуесос 2"],
-		#		"task_deadline":"21 апреля, 2021",
-		#		"task_is_done":0
-		#	}  for i in range(10)
-		#]
-		self.ids.toolbar.title = get_team_name(account_login)
+		
+		team_name = get_team_name(account_login)
+		if team_name != '':
+			self.ids.toolbar.title = team_name
+		else: 
+			# Если произошла ошибка в получении названия
+			self.ids.toolbar.title = "<ОШИБКА>"
+
 		tasks = get_tasks_info(account_login)
+		print(f"tasks: {tasks}")
 
 		self.ids.container.clear_widgets()
 		self.display_tasks()
 
 	def display_tasks(self):
-		""" Обновляет список задач """
+		"""Обновляет список задач"""
 		print ("<method> display_tasks")
 		global tasks
 
-		for task in tasks:
-			users = ""
-			mark = ", "
-			itter = 1
+		for task in tasks['tasks_data']:
+			users = []  # Исполнители задачи
 
-			for user in task["task_users"]:
-				if itter >= len(task["task_users"]):
-					mark = ""
+			# Добавляем исполняющих задачу
+			for user in task["task_user_names"]:
+				users.append(user)
 
-				itter += 1
-				users += user + mark
-
+			# Добавляем карточку с заданием
 			self.ids.container.add_widget(
 				self.TaskCard(
 						text=task["task_text"],
-						secondary_text=users,
+						secondary_text=', '.join(users),  # Строка исполнителей с разделителем ', '
 						tertiary_text=str(task["task_deadline"]),
 						active=bool(task["task_is_done"])
 				)
@@ -592,10 +630,6 @@ class RoleEditScreen(Screen):
 				"on_release": lambda text=f"{self.ids.role_name.text}": registration_screen_link.on_menu_action(text)
 			}
 			menu_items.insert(len(menu_items)-1, item)
-			
-			print("roles")
-			for role in roles:
-				print(f"\t{role}")
 
 			registration_screen_link.menu = MDDropdownMenu(
 				caller=registration_screen_link.ids.role,
@@ -771,4 +805,9 @@ class MyApp(MDApp):
 
 
 if __name__ == '__main__':
+	import sys
+	test = False
+	if "-t" in sys.argv or "--test" in sys.argv:
+		test = True
+
 	MyApp().run()

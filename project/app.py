@@ -14,13 +14,11 @@ server_domain = 'http://127.0.0.1:5000'  # 'http://127.0.0.1:5000'
 
 
 def is_login_unique(login: str) -> bool:
-	"""
-		Этот запрос ищет первое совпадение созданной строки 'login' с логинами 
-		из таблицы <User>
+	"""Этот запрос ищет первое совпадение созданной строки `login` с логинами из таблицы <User>.
+	Возвращает булевое значение того, является ли `login` уникальным.
 	"""
 	print('<func> is_login_unique')
 
-	r = None
 	data = {'login': login}
 	try:
 		r = requests.post(
@@ -31,19 +29,22 @@ def is_login_unique(login: str) -> bool:
 		print(f'\t"POST {server_domain}/is-login-unique" {r.status_code}')
 		print(f"\t{r.text}")
 
-		if r.status_code == requests.codes.ok:
+		if 400 > r.status_code > 199:
+			print(f'\tTrue')
 			return True
 		else:
+			print(f'\tFalse')
 			return False
 
 	except Exception as e:
 		print(e)
+		print("\tFalse")
+		return False
 
 
 def sign(data: dict) -> bool:
 	print('<func> sign')
 
-	r = None
 	try:
 		r = requests.post(
 			url=f'{server_domain}/register',
@@ -54,11 +55,8 @@ def sign(data: dict) -> bool:
 		print(f'\t"POST {server_domain}/register" {r.status_code}')
 		print(f"\t{r.text}")
 
-		# В зависимости от ответа будут меняться дальнейшие действия
-		# При 200 и 300-ых выводить успешное сообщение и ...
-		# При 400 и 500-ых выводить пользователю, что всё плохо
-
-		if r.status_code == requests.codes.ok:
+		# Возвращает булевое значение в соответсвие с кодом статуса ответа  
+		if 400 > r.status_code > 199:
 			print(f'\tTrue')
 			return True
 		else:
@@ -66,8 +64,8 @@ def sign(data: dict) -> bool:
 			return False
 		
 	except Exception as e:
-		print(f'\tFalse')
 		print("Ошибка регистрации\n", e)
+		print(f'\tFalse')
 		return False
 
 
@@ -146,7 +144,6 @@ def get_tasks_info(account_login: str) -> dict:
 	"""
 	print('<func> get_tasks_info')
 
-	r = None
 	try:
 		r = requests.post(
 			url=f'{server_domain}/get_tasks_info',
@@ -161,7 +158,7 @@ def get_tasks_info(account_login: str) -> dict:
 		return tasks
 
 	except Exception as e:
-		print("Ошибка в получении словаря задач\n",e)
+		print("Ошибка в получении словаря задач\n", e)
 		return {}
 
 
@@ -169,7 +166,6 @@ def get_team_users(account_login: str) -> dict:
 	""" Словарь из 2 списков: 1)логины 2)имена """
 	print('<func> get_team_users')
 
-	r = None
 	try:
 		r = requests.post(
 			url=f'{server_domain}/get_team_users',
@@ -191,7 +187,6 @@ def get_team_users(account_login: str) -> dict:
 def get_team_name(account_login: str) -> str:
 	print('<func> get_team_name')
 
-	r = None
 	try:
 		r = requests.post(
 			url=f'{server_domain}/get_team_name',
@@ -206,5 +201,3 @@ def get_team_name(account_login: str) -> str:
 		print("Ошибка входа\n",e)
 		return ''
 
-
-def func(): ...
