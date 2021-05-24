@@ -118,7 +118,7 @@
                 root.manager.transition.duration = 0.5
                 root.manager.current = 'sign_in_screen'
 
-        MDFillRoundFlatButton: #MDRaisedButton:
+        MDFillRoundFlatButton:
             # Текст
             text: "[color=#ffffff][b]ВХОД[/b][/color]"
             font_size: 22
@@ -137,8 +137,13 @@
                 root.manager.current = 'log_in_screen'
 
         MDTextButton:
+            # Текст
             text: "ВЫЙТИ"
+
+            # Позиционирование
             pos_hint: {'center_x': 0.5, 'center_y': 0.28}
+
+            # Размеры
             font_size: 17
 
             on_release:
@@ -151,10 +156,13 @@
     # Текстовое поле ввода названия команды
     team_name: team_name
 
+    # Позиционирование
     orientation: 'vertical'
+
+    # Размеры
     spacing: "12dp"
-    size_hint_y: None
     height: "50dp"
+    size_hint_y: None
 
     MDTextField:
         id: team_name
@@ -177,30 +185,37 @@
                 size_hint: 1, 1
   
                 MDList:
+                    id: container
                     padding : 10,75,10,120
                     spacing : 10
-                    id: container
 
         MDToolbar:
             id: toolbar
+
+            # Текст
             title: "[color=#ffffff]<Введите название команды>[/color]"
             markup: True
-            anchor_title: 'center'
-            pos_hint: {'top': 1.0}
             specific_text_color: 1, 1, 1, 1
 
+            # Позиционирование
+            anchor_title: 'center'
+            pos_hint: {'top': 1.0}
 
             left_action_items: [["arrow-left", lambda x: root.back_to_start(), "Вернуться на стартовую"]]
             right_action_items: [["pencil", lambda x: root.edit_team_name(), "Изменить название команды"]]
-            # 'format-colour-highlight' 'grease-pencil' 'pencil'
 
         MDIconButton:
+            # Текст
             icon: "plus"
-            pos_hint: {'x': 0.8, 'y': 0.03}
             user_font_size: "50sp"
+
+            # Позиционирование
+            pos_hint: {'x': 0.8, 'y': 0.03}
+            
+            # Оформление
+            text_color: 1,1,1,1
             md_bg_color: get_color_from_hex(colors["Teal"]["A700"])
             theme_text_color: "Custom"
-            text_color: 1,1,1,1
 
             on_release:
                 root.clear_fields()
@@ -210,11 +225,16 @@
                 root.manager.current = 'registration_screen'
 
         MDFillRoundFlatButton:
+            # Текст
             text: "[color=#ffffff][b]ЗАРЕГИСТРИРОВАТЬ[/b][/color]"
-            markup: True
-            pos_hint: {'center_x': 0.35, 'center_y': 0.075}
-            size_hint: 0.55, 0.1
             font_size: 22
+            markup: True
+
+            # Позиционирование
+            pos_hint: {'center_x': 0.35, 'center_y': 0.075}
+            
+            # Размеры
+            size_hint: 0.55, 0.1
 
             on_release:
                 root.sign_in()
@@ -223,7 +243,7 @@
 # Экран входа
 <LogInScreen>:
     login: login
-    password:  password
+    password: password
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
 
@@ -274,18 +294,23 @@
 
 # Экран регистрации
 <RegistrationScreen>:
-    name:name
-    role:role
-    button:button
-    label:label
-    warning_label:warning_label
+    name: name
+    role: role
+    button: button
+    label: label
+    warning_label: warning_label
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
 
         MDIconButton:
-            icon: "arrow-left"
-            pos_hint: {'x': 0.05, 'y': 0.9}
+            # Текст
             user_font_size: "30sp"
+
+            # Позиционирование
+            pos_hint: {'x': 0.05, 'y': 0.9}
+            
+            # Оформление
+            icon: "arrow-left"
             specific_text_color: 1, 1, 1, 1
 
             on_release:
@@ -356,20 +381,25 @@
                 size_hint: 1, 1
   
                 MDList:
-                    padding : 10,75,10,120
-                    spacing : 10
                     id: container
+                    padding: 10, 75, 10, 120
+                    spacing: 10
 
         MDToolbar:
             id: toolbar
+            
+            # Текст
             title: "[color=#ffffff][b]<НазваниеКоманды>[/b][/color]"
-            anchor_title: 'center'
+            
+            # Позиционирование
             pos_hint: {'top': 1.0}
+            anchor_title: 'center'
+            
+            # Оформление
             specific_text_color: 1, 1, 1, 1
 
             left_action_items: [["arrow-left", lambda x: root.back_to_start()]]
             right_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
-            # 'format-colour-highlight' 'grease-pencil' 'pencil'
 
         MDNavigationDrawer:
             id: nav_drawer
@@ -381,22 +411,27 @@
                     id: menu_list
 
                     OneLineListItem:
-                        text:"Настройки (в разработке)"
+                        text: "Настройки (в разработке)"
                         on_release: print('кек')
                     OneLineListItem:
-                        text:"Роли (в разработке)"
+                        text: "Роли (в разработке)"
                     OneLineListItem:
-                        text:"Выйти"
+                        text: "Выйти"
                         on_release:
                             root.back_to_start()
 
         MDIconButton:
-            icon: "plus"
-            pos_hint: {'x': 0.8, 'y': 0.03}
+            # Текст
             user_font_size: "50sp"
+            text_color: 1,1,1,1
+
+            # Позиционирование
+            pos_hint: {'x': 0.8, 'y': 0.03}
+            
+            # Оформление
+            icon: "plus"
             md_bg_color: get_color_from_hex(colors["Teal"]["A700"])
             theme_text_color: "Custom"
-            text_color: 1,1,1,1
 
             on_release:
                 root.clear_screen()
@@ -408,12 +443,12 @@
 
 # Экран создания задач
 <TaskScreen>:
-    text:text
-    time:time
-    time_label:time_label
-    button:button
-    label:label
-    warning_label:warning_label
+    text: text
+    time: time
+    time_label: time_label
+    button: button
+    label: label
+    warning_label: warning_label
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
 
@@ -429,28 +464,40 @@
 
         SpecialLabel:
             id: label
+
+            # Текст
             text: "Задача:"
             font_size: 25
             bold: True
 
+            # Позиционирование
             pos_hint: {'center_x': 0.5, 'center_y': 0.85}
-
+            
+            # Оформление
             color: get_color_from_hex(colors["Teal"]["A700"])
 
         SpecialTextField:
             id: text
+
+            # Текст
             hint_text: "Задача"
-            size_hint_y: .15
-            size_hint_x: .6
             multiline: True
             mode: "rectangle"
+            
+            # Позиционирование
             pos_hint: {'center_x': 0.5, 'center_y': 0.7}
+            
+            # Размеры
+            size_hint_y: .15
+            size_hint_x: .6
 
         MDRaisedButton:
             id: time
             text: "[color=#ffffff][b]Список пользователей\n(в разработке)[/b][/color]"
 
             pos_hint: {'center_x': .5, 'center_y': .5}
+
+            #!!!
             # on_release:
             #     root.manager.transition.direction = 'right'
             #     root.manager.transition.duration = 0.5
@@ -492,25 +539,30 @@
 
         MDFillRoundFlatButton:
             id: button
+
+            # Текст
             text: "[color=#ffffff][b]Сохранить задачу[/b][/color]"
-
-            markup: True
-            pos_hint: {'center_x': 0.5, 'center_y': 0.2}
-            size_hint: 0.55, 0.07
             font_size: 20
-
+            markup: True
+            
+            # Позиционирование
+            pos_hint: {'center_x': 0.5, 'center_y': 0.2}
+            
+            # Размеры
+            size_hint: 0.55, 0.07
+            
             on_release:
                 root.make_task()
 
 
 <RoleEditScreen>:
-    role_name:role_name
-    button:button
-    label:label
-    cteate_tasks:cteate_tasks
-    join_tasks:join_tasks
-    inviting:inviting
-    warning_label:warning_label
+    role_name: role_name
+    button: button
+    label: label
+    cteate_tasks: cteate_tasks
+    join_tasks: join_tasks
+    inviting: inviting
+    warning_label: warning_label
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
 
@@ -526,12 +578,16 @@
 
         SpecialLabel:
             id: label
+
+            # Текст
             text: "Создание Роли"
             font_size: 25
             bold: True
-
+            
+            # Позиционирование
             pos_hint: {'center_x': 0.5, 'center_y': 0.85}
-
+            
+            # Оформление
             color: get_color_from_hex(colors["Teal"]["A700"])
 
         SpecialTextField:
@@ -546,38 +602,46 @@
             pos_hint: {'center_x': 0.5, 'center_y': 0.6}  # 'center_y': 0.65
 
         SpecialLabel:
+            # Текст
             text: "Создавать задачи:"
             font_size: 16
-            text_size:self.size
-            halign:'left'
-            valign:'middle'
-
+            text_size: self.size
+            
+            # Позиционирование
+            halign: 'left'
+            valign: 'middle'
             pos_hint: {'center_x': 0.65, 'center_y': 0.5}  # 'center_y': 0.55
+            
         MDSwitch:
             id: cteate_tasks
-            pos_hint: {'center_x': 0.8, 'center_y': 0.5}  # 'center_y': .55
+            pos_hint: {'center_x': 0.8, 'center_y': 0.5}
             on_active: root.on_checkbox1_active(*args)
 
         SpecialLabel:
+            # Текст
             text: "Присоединяться к задачам:"
             font_size: 16
-            text_size:self.size
-            halign:'left'
-            valign:'middle'
+            text_size: self.size
+            
+            # Позиционирование
+            halign: 'left'
+            valign: 'middle'
             pos_hint: {'center_x': 0.65, 'center_y': 0.45}  # 'center_y': 0.50
-
+            
         MDSwitch:
             id: join_tasks
             pos_hint: {'center_x': 0.8, 'center_y': 0.45}  # 'center_y': 0.50
             on_active: root.on_checkbox2_active(*args)
 
         SpecialLabel:
+            # Текст
             text: "Добавлять пользователей к задачам:"
             font_size: 16
-            text_size:self.size
-            halign:'left'
-            valign:'middle'
-
+            text_size: self.size
+            
+            # Позиционирование
+            halign: 'left'
+            valign: 'middle'
             pos_hint: {'center_x': 0.65, 'center_y': 0.4}  # 'center_y': 0.45
 
         MDSwitch:
@@ -595,20 +659,26 @@
 
         MDFillRoundFlatButton:
             id: button
+            
+            # Текст
             text: "[color=#ffffff][b]СОЗДАТЬ РОЛЬ[/b][/color]"
             markup: True
-            pos_hint: {'center_x': 0.5, 'center_y': 0.2}
-            size_hint: 0.55, 0.07
             font_size: 16
-
+            
+            # Позиционирование
+            pos_hint: {'center_x': 0.5, 'center_y': 0.2}
+            
+            # Размеры
+            size_hint: 0.55, 0.07
+            
             on_release:
                 root.create_role()
 
 <UserInfoBox>:
-    name:name
-    role:role
-    login:login
-    password:password
+    name: name
+    role: role
+    login: login
+    password: password
     BoxLayout:
         color: 0,0,0,1
         canvas.before:
@@ -626,47 +696,54 @@
             orientation: 'vertical'
             Label:
                 id: name
-                text_size:self.size
-                halign:'left'
-                valign:'middle'
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
                 color: 0,0,0,1
                 font_size: 16
             Label:
                 id: role
-                text_size:self.size
-                halign:'left'
-                valign:'middle'
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
                 color: 0,0,0,1
                 font_size: 16
             Label:
                 id: login
-                text_size:self.size
-                halign:'left'
-                valign:'middle'
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
                 color: 0,0,0,1
                 font_size: 16
             Label:
                 id: password
-                text_size:self.size
-                halign:'left'
-                valign:'middle'
+                text_size: self.size
+                halign: 'left'
+                valign: 'middle'
                 color: 0,0,0,1
                 font_size: 16
 
         MDIconButton:
-            icon: "share"
-            user_font_size: "50sp"
-            md_bg_color: get_color_from_hex(colors["Teal"]["A700"])
-            pos_hint: {'center_y': .5}
-            on_release: root.copy_to_clipboard(root)
-            theme_text_color: "Custom"
+            # Текст
+            user_font_size: "35sp"
             text_color: 1,1,1,1
+            
+            # Позиционирование
+            pos_hint: {'center_y': .5}
+            
+            # Оформление
+            icon: "share"
+            md_bg_color: get_color_from_hex(colors["Teal"]["A700"])
+            theme_text_color: "Custom"
+            
+            on_release: root.copy_to_clipboard(root)
 
 
 <InfoScreen>:
-    info_list:info_list
+    info_list: info_list
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
+        
         ScrollView:
             MDList:
                 id: info_list
@@ -674,12 +751,18 @@
 
         MDFillRoundFlatButton:
             id: button
+            
+            # Текст
             text: "[color=#ffffff][b]ВОЙТИ[/b][/color]"
             markup: True
-            pos_hint: {'center_x': 0.5, 'center_y': 0.05}
-            size_hint: 0.55, 0.07
             font_size: 20
-
+            
+            # Позиционирование
+            pos_hint: {'center_x': 0.5, 'center_y': 0.05}
+            
+            # Размеры
+            size_hint: 0.55, 0.07
+            
             on_release:
                 root.manager.transition.direction = 'up'
                 root.manager.transition.duration = 0.5
@@ -700,16 +783,19 @@
                 size_hint: 1, 1
   
                 MDList:
-                    padding : 10,75,10,120
-                    spacing : 10
                     id: container
+                    padding : 10, 75, 10, 120
+                    spacing : 10
 
         MDToolbar:
             id: toolbar
+            # Текст
             title: "[color=#ffffff][b]<НазваниеКоманды>[/b][/color]"
-            anchor_title: 'center'
-            pos_hint: {'top': 1.0}
             specific_text_color: 1, 1, 1, 1
-
+            
+            # Позиционирование
+            pos_hint: {'top': 1.0}
+            anchor_title: 'center'
+            
             left_action_items: [["arrow-left", lambda x: root.back_to_start()]]
             right_action_items: [["tip", lambda x: root.accept_changes()]]
