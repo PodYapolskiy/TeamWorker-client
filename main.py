@@ -1,3 +1,4 @@
+from traceback import print_tb
 import kivy
 kivy.require('2.0.0')
 
@@ -40,7 +41,7 @@ delete_if_exit = True
 roles = []
 val1, val2, val3 = False, False, False
 
-'''
+'''  Дальнейшая попытка сделать класс залогированного пользователя
 class Singleton(type):
 	"""Метакласс. Паттерн проектирования 'одиночка'."""
 	# def __init__(cls, *args, **kwargs):
@@ -74,8 +75,12 @@ account_login = None
 
 class StartScreen(Screen):
 	"""Начальный экран"""
+	def on_enter(self):
+		print("<class> StartScreen")
+
 	def define_screens(self):
 		"""Создаёт ссылки на экраны"""
+		print("\t<method> define_screens")
 		global registration_screen_link
 		global sign_in_screen_link
 		global role_edit_screen_link
@@ -95,12 +100,6 @@ class SignInScreen(Screen):
 	"""Экран регистрации"""
 	dialog = None
 
-	def __init__(self, **kwargs):
-		super().__init__(**kwargs)
-		self.create_user_box()
-		self.ids.container.children[user_box_id].text = "<Введите Ваше имя>"
-		self.ids.container.children[user_box_id].secondary_text = "Капитан"
-
 	class SwipeToDeleteItem(MDCardSwipe, Screen):
 		"""Класс карточки с пользователем"""
 		text = StringProperty()
@@ -108,7 +107,7 @@ class SignInScreen(Screen):
 
 		def change_screen(self, instance):
 			"""Функция, меняющая тексты на экране регистрации пользователя"""
-			print("<method> change_screen")
+			print("\t\t<method> change_screen")
 
 			global user_box_id
 			global delete_if_exit
@@ -124,32 +123,34 @@ class SignInScreen(Screen):
 			screen_manager.transition.direction = 'left'
 			delete_if_exit = False # переменная, отвечающая за то, будет ли по нажатию кнопки обратно в меню регистрации удалятся созданная заранее карточка
 
-		def set_user_box_id(self, instance):  # Функция, определяющая айдишник карточки
-			print("<method> set_user_box_id")
+		def set_user_box_id(self, instance):
+			"""Функция, определяющая айдишник карточки"""
+			print("\t\t<method> set_user_box_id")
 			global user_box_id
 			global sign_in_screen_link
 			user_box_id = sign_in_screen_link.ids.container.children.index(instance)
 
 		def remove_card(self, instance):
+			print("\t\t<method> remove_card")
 			global sign_in_screen_link
-			print('udaleniye')
 			sign_in_screen_link.ids.container.remove_widget(instance)
 
 	class EditTeamName(BoxLayout):
 		""" Текстовое поле диалогового окна """
 		team_name = ObjectProperty()
 
-	@staticmethod
-	def back_to_start():
-		print('<staticmethod> back_to_start')
-		screen_manager.transition.direction = 'up'
-		screen_manager.transition.duration = 0.5
-		screen_manager.current = 'start_screen'
+	def __init__(self, **kwargs):
+		super().__init__(**kwargs)
+		self.create_user_box()
+		self.ids.container.children[user_box_id].text = "<Введите Ваше имя>"
+		self.ids.container.children[user_box_id].secondary_text = "Капитан"
+
+	def on_enter(self):
+		print("<class> SignInScreen")
 	
 	def sign_in(self):
-		"""  Регистрация новой команды  """
-		print("<method> sign_in")
-
+		"""Регистрация новой команды"""
+		print("\t<method> sign_in")
 		global data
 		global roles
 		global account_login
@@ -210,7 +211,7 @@ class SignInScreen(Screen):
 
 	def edit_team_name(self):
 		""" Создаёт диалоговое окно """
-		print("<method> edit_team_name")
+		print("\t<method> edit_team_name")
 
 		if not self.dialog:
 			self.dialog = MDDialog(
@@ -236,11 +237,11 @@ class SignInScreen(Screen):
 		self.dialog.open()
 	
 	def dialog_cancel(self, instance):
-		print("<method> dialog_cancel")
+		print("\t<method> dialog_cancel")
 		self.dialog.dismiss()
 	
 	def dialog_accept(self, instance):
-		print("<method> dialog_accept")
+		print("\t<method> dialog_accept")
 		for obj in self.dialog.content_cls.children:
 			if isinstance(obj, MDTextField):
 				print(obj.text)
@@ -249,7 +250,7 @@ class SignInScreen(Screen):
 
 	def clear_fields(self):
 		"""Функция, меняющая все тексты в меню регистрации"""
-		print("<method> clear_fields")
+		print("\t<method> clear_fields")
 		registration_screen_link = self.manager.get_screen('registration_screen')
 		registration_screen_link.ids.name.text = ""
 		registration_screen_link.ids.role.text = "Роль"
@@ -259,7 +260,7 @@ class SignInScreen(Screen):
 		registration_screen_link.ids.warning_label.text = ""  # Текст таблички, с сообщением об отсутствии текста в полях
 
 	def create_user_box(self):
-		print("<method> create_user_box")
+		print("\t<method> create_user_box")
 		global user_box_id
 		global delete_if_exit
 
@@ -268,14 +269,24 @@ class SignInScreen(Screen):
 		user_box_id = 0
 		delete_if_exit = True
 
+	@staticmethod
+	def back_to_start():
+		print('\t<staticmethod> back_to_start\n')
+		screen_manager.transition.direction = 'up'
+		screen_manager.transition.duration = 0.5
+		screen_manager.current = 'start_screen'
+
 
 class LogInScreen(Screen):
 	"""Экран входa"""
 	login = ObjectProperty()
 	password = ObjectProperty()
 
+	def on_enter(self):
+		print("<class> LogInScreen")
+
 	def log_in(self):
-		print("<method> log_in")
+		print("\t<method> log_in")
 		global account_login
 
 		login = self.login.text
@@ -323,8 +334,11 @@ class RegistrationScreen(Screen):
 			width_mult=4,
 		)
 
+	def on_enter(self):
+		print("<class> RegistrationScreen")
+
 	def on_menu_action(self, item_text):
-		print(f'<method> on_menu_action with text: {item_text}')
+		print(f'\t<method> on_menu_action with text: {item_text}')
 
 		global role_edit_screen_link
 		global roles  # Чтобы автоматически выдавать все возможности капитану
@@ -340,7 +354,7 @@ class RegistrationScreen(Screen):
 			self.menu.dismiss()
 
 	def registrate(self):
-		print("<method> registrate")
+		print("\t<method> registrate")
 		global user_box_id
 		
 		sign_in_screen_link = self.manager.get_screen('sign_in_screen')
@@ -355,9 +369,10 @@ class RegistrationScreen(Screen):
 			self.manager.current = 'sign_in_screen'
 
 	def delete_box(self):
+		print("\t<method> delete_box")
 		global delete_if_exit
 		if delete_if_exit == True:
-			print("deleting")
+			print("\t\tdeleting")
 			sign_in_screen_link = self.manager.get_screen('sign_in_screen')
 			sign_in_screen_link.ids.container.remove_widget(sign_in_screen_link.ids.container.children[0])
 
@@ -375,7 +390,7 @@ class MainScreen(Screen):
 			pass
 
 		def change_screen(self, instance):
-			print("<method> change_screen")
+			print("\t\t<method> change_screen")
 
 			global task_box_id
 			global task_screen_link
@@ -393,43 +408,45 @@ class MainScreen(Screen):
 			screen_manager.transition.direction = 'left'
 
 		def set_task_box_id(self, instance):
-			""" Функция, определяющая айдишник карточки """
-			print("<method> set_user_box_id")
+			"""Функция, определяющая айдишник карточки"""
+			print("\t\t<method> set_user_box_id")
 
 			global task_box_id
 			global main_screen_link
 
 			children = main_screen_link.ids.container.children
 			task_box_id = len(children) - 1 - children.index(instance)
-			print(task_box_id)
+			print(f"\t\t{task_box_id}")
 
 		def remove_card(self, instance):
+			print('\t\t<method> remove_card')
+
 			global main_screen_link
 			global tasks
 			global account_login
 			global task_box_id
 
-			print('<method> remove_card')
 			self.set_task_box_id(instance)
 			tasks.pop(task_box_id)
 			push_tasks_info(tasks)
 			main_screen_link.ids.container.remove_widget(instance)
 
 		def on_checkbox_active(self, checkbox, value, instance):
-			print("<method> on_checkbox_active")
+			print("\t\t<method> on_checkbox_active")
 
 			global task_box_id
 			global tasks
 			global account_login
 
 			self.set_task_box_id(instance)
-			print({value})
+			print(f"\t\t\t{value}")
 			if value:
 				tasks[task_box_id]['task_is_done'] = 1
-				print("On")
+				print("\t\t\tOn")
 			else:
 				tasks[task_box_id]['task_is_done'] = 0
-				print("Off")
+				print("\t\t\tOff")
+
 			push_tasks_info(tasks)
 
 	def on_enter(self):
@@ -444,7 +461,7 @@ class MainScreen(Screen):
 				}  for i in range(10)
 			]
 		"""
-		print("<method> on_enter")
+		print("<class> MainScreen")
 		global account_login
 
 		# Тот пользователь, который входит (глобальная переменная)
@@ -461,22 +478,38 @@ class MainScreen(Screen):
 			self.ids.toolbar.title = "<ОШИБКА>"
 
 		tasks = get_tasks_info(account_login)
-		print(f"tasks: {tasks}")
+		print(f"\ttasks: {tasks}")
 
 		self.ids.container.clear_widgets()
 		self.display_tasks()
 
 	def display_tasks(self):
 		"""Обновляет список задач"""
-		print ("<method> display_tasks")
+		print ("\t<method> display_tasks")
 		global tasks
 
-		for task in tasks['tasks_data']:
-			users = []  # Исполнители задачи
+		if test:
+			date = datetime.utcnow()
 
-			# Добавляем исполняющих задачу
-			for user in task["task_user_names"]:
-				users.append(user)
+			year, month, day = str(date.date()).split('-')
+			hours, minutes = str(date.time()).split(':')[:2]
+
+			task_deadline = f"До: {day}.{month}.{year[2:]} {hours}:{minutes}"
+
+			tasks = {
+				'tasks_data': [
+					{
+						"task_text": "Текст задачи",
+						"task_user_logins": ["login_1", "login_2"],
+						"task_user_names": ["Толя", "Дима"],
+						"task_deadline": task_deadline,
+						"task_is_done": True
+					}
+				]
+			}
+
+		for task in tasks['tasks_data']:
+			users = [user for user in task["task_user_names"]]  # Добавляем исполняющих задачу
 
 			# Добавляем карточку с заданием
 			self.ids.container.add_widget(
@@ -489,12 +522,13 @@ class MainScreen(Screen):
 			)
 
 	def change_box_id(self):
+		print("\t<method> change_box_id")
 		global task_box_id
 		task_box_id = len(self.ids.container.children)
 
 	@staticmethod
 	def back_to_start():
-		print('<staticmethod> back_to_start')
+		print('<staticmethod> back_to_start\n')
 		screen_manager.transition.direction = 'up'
 		screen_manager.transition.duration = 0.5
 		screen_manager.current = 'start_screen'
@@ -508,8 +542,11 @@ class MainScreen(Screen):
 
 class TaskScreen(Screen):
 	
+	def on_enter(self):
+		print("<class> TaskScreen")
+
 	def make_task(self):
-		print("<method> make_task")
+		print("\t<method> make_task")
 		global tasks
 		global task_box_id
 
@@ -537,7 +574,7 @@ class TaskScreen(Screen):
 			tasks.pop(task_box_id)
 
 		tasks.insert(task_box_id, task)
-		print(tasks)
+		print(f"\t\t{tasks}")
 
 		push_tasks_info(tasks)
 
@@ -548,39 +585,42 @@ class TaskScreen(Screen):
 
 	def show_time_picker(self):
 		""" Открытие диалогого окна времени """
-		print("<method> show_time_picker")
+		print("\t<method> show_time_picker")
 
 		time_dialog = MDTimePicker()
 		time_dialog.bind(on_save=self.on_save_time)
 		time_dialog.open()
 
 	def on_save_time(self, instance, value):
-		print("<method> on_save_time")
+		print("\t<method> on_save_time")
 
 		time_temp_list = str(value).split(":")
 		self.ids.time_label.text = f'{time_temp_list[0]}:{time_temp_list[1]}'
-		print(instance, value)
+		print("\t\t", instance, value)
 
 	def show_date_picker(self):
 		""" Открытие диалогого окна даты """
-		print("<method> show_date_picker")
+		print("\t<method> show_date_picker")
 
 		date_dialog = MDDatePicker()
 		date_dialog.bind(on_save=self.on_save_date)
 		date_dialog.open()
 
 	def on_save_date(self, instance, value, date_range):
-		print("<method> on_save_date")
+		print("\t<method> on_save_date")
 
 		date_temp_list = str(value).split("-")
 		self.ids.date_label.text = f'{date_temp_list[0]}.{date_temp_list[1]}.{date_temp_list[2]}'
-		print(instance, value, date_range)
+		print("\t\t", instance, value, date_range)
 
 
 class RoleEditScreen(Screen):
 
+	def on_enter(self):
+		print("<class> RoleEditScreen")
+
 	def on_checkbox1_active(self, checkbox, value):
-		print("Create_tasks: ", value)
+		print("\tCreate_tasks: ", value)
 		global val1
 
 		if value:
@@ -589,7 +629,7 @@ class RoleEditScreen(Screen):
 			val1 = False
 
 	def on_checkbox2_active(self, checkbox, value):
-		print("Join_tasks: ", value)
+		print("\tJoin_tasks: ", value)
 		global val2
 
 		if value:
@@ -598,7 +638,7 @@ class RoleEditScreen(Screen):
 			val2 = False
 
 	def on_checkbox3_active(self, checkbox, value):
-		print("Inviting: ", value)
+		print("\tInviting: ", value)
 		global val3
 		
 		if value:
@@ -607,7 +647,7 @@ class RoleEditScreen(Screen):
 			val3 = False
 
 	def create_role(self):
-		print("<method> create_role")
+		print("\t<method> create_role")
 
 		global val1
 		global val2
@@ -648,7 +688,25 @@ class RoleEditScreen(Screen):
 
 class InfoScreen(Screen):
 
+	class UserInfoBox(BoxLayout,RectangularElevationBehavior):
+		name = ObjectProperty()
+		role = ObjectProperty()
+		login = ObjectProperty()
+		password = ObjectProperty()
+		
+		def __init__(self, name, role, login, password, **kwargs):
+			super().__init__(**kwargs)
+			self.name.text = f'Имя:{name}'
+			self.role.text = f'Роль:{role}'
+			self.login.text = f'Логин:{login}'
+			self.password.text = f'Пароль:{password}'
+
+		def copy_to_clipboard(self, instance):
+			print("\t\t<method> copy_to_clipboard")
+			Clipboard.copy(f"{instance.login.text}\n{instance.password.text}")
+	
 	def on_enter(self):
+		print("<class> InfoScreen")
 		global data
 
 		for item in self.ids.info_list.children:
@@ -665,22 +723,6 @@ class InfoScreen(Screen):
 					)
 				)
 
-	class UserInfoBox(BoxLayout,RectangularElevationBehavior):
-		name = ObjectProperty()
-		role = ObjectProperty()
-		login = ObjectProperty()
-		password = ObjectProperty()
-		
-		def __init__(self, name, role, login, password, **kwargs):
-			super().__init__(**kwargs)
-			self.name.text = f'Имя:{name}'
-			self.role.text = f'Роль:{role}'
-			self.login.text = f'Логин:{login}'
-			self.password.text = f'Пароль:{password}'
-
-		def copy_to_clipboard(self, instance):
-			Clipboard.copy(f"{instance.login.text}\n{instance.password.text}")
-
 
 class TaskMembersScreen(Screen):
 
@@ -694,36 +736,38 @@ class TaskMembersScreen(Screen):
 
 		def set_task_box_id(self, instance):
 			""" Функция, определяющая айдишник карточки """
-			print("<method> set_user_box_id")
+			print("\t\t<method> set_user_box_id")
 
 			global task_member_box_id
 			global task_members_screen_link
 
 			children = task_members_screen_link.ids.container.children
 			task_member_box_id = len(children) - 1 - children.index(instance)
-			print(task_member_box_id)
+			print("\t\t\t", task_member_box_id)
 
 		def on_checkbox_active(self, checkbox, value, instance):
+			print("\t\t<method> on_checkbox_active")
 			global task_member_box_id
 			global tasks
 			global account_login
 			global team_users
 
 			self.set_task_box_id(instance)
-			print({value})
+			print(f"\t\t\t{value}")
 
 			if value:
 				tasks[task_member_box_id]["task_users_login"].append(team_users["users_logins"][task_member_box_id])
 				tasks[task_member_box_id]["task_users"].append(team_users["users_names"][task_member_box_id])
-				print("On")
+				print("\t\t\tOn")
 			else:
 				tasks[task_member_box_id]["task_users_login"].pop([tasks.index(team_users["users_logins"][task_member_box_id])])
 				tasks[task_member_box_id]["task_users"].pop([tasks.index(team_users["users_names"][task_member_box_id])])
-				print("Off")
+				print("\t\t\tOff")
 
 			push_tasks_info(tasks)
 
 	def on_enter(self):
+		print("<class> TaskMembersScreen")
 		global team_users
 		global task_box_id
 		global tasks
@@ -742,12 +786,11 @@ class TaskMembersScreen(Screen):
 					)
 				)
 
-	def accept_changes(self):
-		pass
+	def accept_changes(self): ...
 
 	@staticmethod
 	def back_to_start():
-		print('<staticmethod> back_to_start')
+		print('\t<staticmethod> back_to_start\n')
 		screen_manager.transition.direction = 'up'
 		screen_manager.transition.duration = 0.5
 		screen_manager.current = 'start_screen'
@@ -785,7 +828,8 @@ class MyApp(MDApp):
 
 	def refresh_callback(self, *args):
 		""" Обновляет состояние приложения, пока спиннер остаётся на экране """
-
+		print("<class> MDApp <method> refresh_callback")
+		
 		def refresh_callback(interval):
 			global main_screen_link
 			main_screen_link.ids.container.clear_widgets()
@@ -801,6 +845,7 @@ class MyApp(MDApp):
 	
 	def exit_app(self):
 		""" Осуществляет выход из приложения """
+		print("<class> MDApp <method> exit_app")
 		self.get_running_app().stop()
 
 
