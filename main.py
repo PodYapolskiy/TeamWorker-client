@@ -80,7 +80,7 @@ class StartScreen(Screen):
 
 	def define_screens(self):
 		"""Создаёт ссылки на экраны"""
-		print("\t<method> define_screens")
+		print("\t<method> define_screens\n")
 		global registration_screen_link
 		global sign_in_screen_link
 		global role_edit_screen_link
@@ -244,7 +244,7 @@ class SignInScreen(Screen):
 		print("\t<method> dialog_accept")
 		for obj in self.dialog.content_cls.children:
 			if isinstance(obj, MDTextField):
-				print(obj.text)
+				print("\t\t", obj.text)
 				self.ids.toolbar.title = obj.text
 		self.dialog.dismiss()
 
@@ -688,7 +688,7 @@ class RoleEditScreen(Screen):
 
 class InfoScreen(Screen):
 
-	class UserInfoBox(BoxLayout,RectangularElevationBehavior):
+	class UserInfoBox(BoxLayout, RectangularElevationBehavior):
 		name = ObjectProperty()
 		role = ObjectProperty()
 		login = ObjectProperty()
@@ -716,12 +716,12 @@ class InfoScreen(Screen):
 			user = data['users'][len(data['users'])-1-i]
 			self.ids.info_list.add_widget(
 				self.UserInfoBox(
-						name=user['user_name'],
-						role=user['user_role'],
-						login=user['user_login'],
-						password=user['user_password']
-					)
+					name=user['user_name'],
+					role=user['user_role'],
+					login=user['user_login'],
+					password=user['user_password']
 				)
+			)
 
 
 class TaskMembersScreen(Screen):

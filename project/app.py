@@ -30,20 +30,34 @@ def is_login_unique(login: str) -> bool:
 		print(f"\t{r.text}")
 
 		if 400 > r.status_code > 199:
-			print(f'\tTrue')
+			print(f'\tTrue\n')
 			return True
 		else:
-			print(f'\tFalse')
+			print(f'\tFalse\n')
 			return False
 
 	except Exception as e:
 		print(e)
-		print("\tFalse")
+		print("\tFalse\n")
 		return False
 
 
 def sign(data: dict) -> bool:
-	print('<func> sign')
+	"""
+		{
+			'team_name': self.ids.toolbar.title,
+			'users': [
+				{
+					'user_login':    str,
+					'user_password': str,
+					'user_name':     str,
+					'user_role':     str,
+				}
+			],
+			'roles': List[str]
+		}
+	"""
+	print('\n<func> sign')
 
 	try:
 		r = requests.post(
@@ -57,22 +71,27 @@ def sign(data: dict) -> bool:
 
 		# Возвращает булевое значение в соответсвие с кодом статуса ответа  
 		if 400 > r.status_code > 199:
-			print(f'\tTrue')
+			print(f'\tTrue\n')
 			return True
 		else:
-			print(f'\tFalse')
+			print(f'\tFalse\n')
 			return False
 		
 	except Exception as e:
-		print("Ошибка регистрации\n", e)
-		print(f'\tFalse')
+		print("\tОшибка регистрации\n", f"\t{e}\n")
+		print(f'\tFalse\n')
 		return False
 
 
 def log(data: dict) -> bool:
-	print('<func> log')
+	"""
+		{
+			'login': str, 
+			'password': str
+		}
+	"""
+	print('\n<func> log')
 
-	r = None
 	try:
 		r = requests.post(
 			url=f'{server_domain}/enter',
@@ -84,36 +103,34 @@ def log(data: dict) -> bool:
 		print(f"\t{r.text}")
 		
 		if r.status_code == requests.codes.ok:
-			print(f'\tTrue')
+			print(f'\tTrue\n')
 			return True
 		else:
-			print(f'\tFalse')
+			print(f'\tFalse\n')
 			return False
 		
 	except Exception as e:
 		print(f'\tFalse')
-		print("Ошибка входа\n",e)
+		print("\tОшибка входа\n", f"\t{e}\n")
 		return False
 
 
 #!!!
 def push_tasks_info(tasks: list):
-	print('<func> push_tasks_info')
+	print('\n<func> push_tasks_info')
 	"""
 		{
 			'tasks_data': [
 		           {
-		               "task_text":f"Сосать бибу {i}",
-		               "task_users_login":["huesos1login","huesos2login"],
-		               "task_users":["хуесос 1", "Хуесос 2"],
-		               "task_deadline":"21 апреля, 2021",
-		               "task_is_done":0
-		           } for i in range(10)
+		               "task_text":        str,
+		               "task_users_login": List[str],
+		               "task_users":       List[str],
+		               "task_deadline":    datetime.datetime(),
+		               "task_is_done":     bool
+		           }
 		       ]
 		}
 	"""
-	
-	r = None
 	try:
 		r = requests.post(
 			url=f'{server_domain}/push_tasks_info',
@@ -125,7 +142,8 @@ def push_tasks_info(tasks: list):
 		print(f"\t{r.text}")
 
 	except Exception as e:
-		print("Ошибка в отправке задач\n", e)
+		print("\tОшибка в отправке задач\n", f"\t{e}\n")
+		return
 
 
 def get_tasks_info(account_login: str) -> dict:
@@ -133,16 +151,16 @@ def get_tasks_info(account_login: str) -> dict:
 		{
 			'tasks_data': [
 				{
-					"task_text": str()
-					"task_user_logins": [str(), ...] 
-					"task_user_names": [str(), ...]
-					"task_deadline": #! datetime.datetime()
-					"task_is_done": bool()
+					"task_text":        str
+					"task_user_logins": List[str] 
+					"task_user_names":  List[str]
+					"task_deadline":    datetime.datetime()
+					"task_is_done":     bool
 				}
 			]
 		}
 	"""
-	print('<func> get_tasks_info')
+	print('\n<func> get_tasks_info')
 
 	try:
 		r = requests.post(
@@ -153,18 +171,23 @@ def get_tasks_info(account_login: str) -> dict:
 
 		print(f'\t"POST {server_domain}/get_tasks_info" {r.status_code}')
 		tasks: dict = json.loads(r.text)
-		print("tasks: ", json.dumps(tasks, indent=4, ensure_ascii=False))
+		print("tasks: ", json.dumps(tasks, indent=4, ensure_ascii=False), "\n")
 
 		return tasks
 
 	except Exception as e:
-		print("Ошибка в получении словаря задач\n", e)
+		print("\tОшибка в получении словаря задач\n", f"\t{e}\n")
 		return {}
 
 
 def get_team_users(account_login: str) -> dict:
-	""" Словарь из 2 списков: 1)логины 2)имена """
-	print('<func> get_team_users')
+	"""Словарь из 2 списков: 1)логины 2)имена
+		{
+			'user_logins': List[str]
+			'user_names':  List[str]
+		}
+	"""
+	print('\n<func> get_team_users')
 
 	try:
 		r = requests.post(
@@ -175,17 +198,17 @@ def get_team_users(account_login: str) -> dict:
 
 		print(f'\t"POST {server_domain}/get_team_users" {r.status_code}')
 		data: dict = json.loads(r.text)
-		print("data: ", json.dumps(data, indent=4, ensure_ascii=False))
+		print("data: ", json.dumps(data, indent=4, ensure_ascii=False), "\n")
 
 		return data
 
 	except Exception as e:
-		print("Ошибка в получении имени команды\n",e)
+		print("\tОшибка в получении имени команды\n", f"\t{e}\n")
 		return {}
 
 
 def get_team_name(account_login: str) -> str:
-	print('<func> get_team_name')
+	print('\n<func> get_team_name')
 
 	try:
 		r = requests.post(
@@ -194,10 +217,10 @@ def get_team_name(account_login: str) -> str:
 			headers=headers
 		)
 
-		print(f'\t"POST {server_domain}/get_team_name" {r.status_code}')
+		print(f'\t"POST {server_domain}/get_team_name" {r.status_code}', "\n")
 		return json.loads(r.text)['team_name']
 
 	except Exception as e:
-		print("Ошибка входа\n",e)
+		print("\tОшибка входа\n", f"\t{e}\n")
 		return ''
 
