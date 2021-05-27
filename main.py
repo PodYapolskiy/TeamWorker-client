@@ -1,3 +1,4 @@
+from traceback import print_tb
 import kivy
 kivy.require('2.0.0')
 
