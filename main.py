@@ -1,4 +1,3 @@
-from traceback import print_tb
 import kivy
 kivy.require('2.0.0')
 
@@ -6,7 +5,7 @@ kivy.require('2.0.0')
 from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.uix.screenmanager import Screen, ScreenManager
-from kivy.properties import ObjectProperty, StringProperty, BooleanProperty
+from kivy.properties import ObjectProperty, StringProperty, NumericProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.config import Config
 from kivy.core.clipboard import Clipboard
@@ -22,7 +21,7 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.behaviors import RectangularElevationBehavior
 from kivymd.uix.picker import MDTimePicker, MDDatePicker
 from kivymd.uix.selectioncontrol import MDCheckbox
-from kivymd.uix.snackbar import Snackbar
+from kivymd.uix.snackbar import BaseSnackbar
 
 # Импорт своих модулей из пакета project
 from project import sign, log, push_tasks_info, get_tasks_info, get_team_name, get_team_users, generate_string
@@ -40,6 +39,14 @@ Config.set('kivy', 'keyboard_mode', 'systemanddock')  # открытие кла�
 delete_if_exit = True
 roles = []
 val1, val2, val3 = False, False, False
+
+
+class CustomSnackbar(BaseSnackbar):
+	"""Кастомный Снэкбар. Плашка, возникающая при ошибках"""
+	text = StringProperty(None)
+	icon = StringProperty(None)
+	font_size = NumericProperty("20sp")
+
 
 '''  Дальнейшая попытка сделать класс залогированного пользователя
 class Singleton(type):
@@ -172,7 +179,7 @@ class SignInScreen(Screen):
 			user_dict = {}  # Временный словарь для каждой итерации
 
 			# Генерируем значения логина и пароля пользователя
-			user_login = generate_string(unique=True)  # (unique=False)  #!!!
+			user_login = generate_string(unique=False)  # (unique=True) #!!!
 			user_dict['user_login'] = user_login
 			user_dict['user_password'] = generate_string(unique=False)
 
@@ -202,7 +209,15 @@ class SignInScreen(Screen):
 			self.manager.transition.duration = 0.5
 			self.manager.current = 'info_screen'
 		else:
-			Snackbar(text="Не удалось передать данные на сервер", font_size="18dp").open()
+			snackbar = CustomSnackbar(
+				text="[color=#ffffff][b]Ошибка регистрации[/b][/color]",
+				icon="information",
+				bg_color="#00BFA5",
+				snackbar_x="10dp",
+				snackbar_y="10dp",
+			)
+			snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+			snackbar.open()
 
 			if test:
 				self.manager.transition.direction = 'down'
@@ -285,6 +300,10 @@ class LogInScreen(Screen):
 	def on_enter(self):
 		print("<class> LogInScreen")
 
+		if test:
+			self.ids.login.text = "52KCB87OKQ"
+			self.ids.password.text = "FW1LE81IO2"
+
 	def log_in(self):
 		print("\t<method> log_in")
 		global account_login
@@ -301,7 +320,15 @@ class LogInScreen(Screen):
 			self.manager.transition.duration = 0.5
 			self.manager.current = 'main_screen'
 		else:
-			Snackbar(text="Ошибка входа", font_size="18dp").open()
+			snackbar = CustomSnackbar(
+				text="[color=#ffffff][b]Ошибка входа[/b][/color]",
+				icon="information",
+				bg_color="#00BFA5",
+				snackbar_x="10dp",
+				snackbar_y="10dp",
+			)
+			snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+			snackbar.open()
 			
 			if test:
 				self.manager.transition.direction = 'down'
@@ -453,12 +480,12 @@ class MainScreen(Screen):
 		"""
 			tasks = [
 				{
-					"task_text":f"Сосать бибу {i}",
-					"task_user_logins":["huesos1login","huesos2login"],
-					"task_user_names":["хуесос 1", "Хуесос 2"],
-					"task_deadline":"21 апреля, 2021",
-					"task_is_done":0
-				}  for i in range(10)
+					"task_text":        str
+					"task_user_logins": List[str] 
+					"task_user_names":  List[str]
+					"task_deadline":    datetime.datetime()
+					"task_is_done":     bool
+				}
 			]
 		"""
 		print("<class> MainScreen")
@@ -488,6 +515,7 @@ class MainScreen(Screen):
 		print ("\t<method> display_tasks")
 		global tasks
 
+		#// (test)
 		if test:
 			date = datetime.utcnow()
 
@@ -548,20 +576,20 @@ class TaskScreen(Screen):
 	def make_task(self):
 		print("\t<method> make_task")
 		global tasks
-		global task_box_id
+		global task_box_id  # Глобальный id-шник заданий. Равен количеству заданий.
 
 		if self.ids.text.text == "" or self.ids.time_label.text == "HH.MM" or self.ids.date_label.text == "YYYY.DD.MM":
 			self.ids.warning_label.text = "Введите все данные"
-
 		else:
 			time_list = str(self.ids.time_label.text).split(':')
 			date_list = str(self.ids.date_label.text).split('.')
+
 			task = {
 				"task_text": str(self.ids.text.text),
 				"task_users_login": ["user1_login", "user2_login"],  #!!!
 				"task_users": ["Пользователь 1", "Пользователь 2"],  #!!!
 				"task_deadline": datetime(int(date_list[0]), int(date_list[1]), int(date_list[2]), int(time_list[0]), int(time_list[1])),
-				"task_is_done": 0
+				"task_is_done": False
 			}
 
 			# get_team_users(account_login)
@@ -570,13 +598,16 @@ class TaskScreen(Screen):
 			# 	"users_names": []
 			# }
 
+		#???
 		if len(tasks) != task_box_id:
+			print("????????????????????????????")
 			tasks.pop(task_box_id)
 
-		tasks.insert(task_box_id, task)
-		print(f"\t\t{tasks}")
+		#!!! tasks.insert(task_box_id, task)
+		# print(f"\t\t{tasks}")
+		print("tasks: \n", json.dumps(tasks, indent=4, ensure_ascii=False))
 
-		push_tasks_info(tasks)
+		# push_tasks_info(tasks)
 
 		self.ids.warning_label.text = ""
 		screen_manager.transition.direction = 'right'
@@ -592,11 +623,10 @@ class TaskScreen(Screen):
 		time_dialog.open()
 
 	def on_save_time(self, instance, value):
-		print("\t<method> on_save_time")
+		print(f"\t<method> on_save_time: {value}")
 
 		time_temp_list = str(value).split(":")
 		self.ids.time_label.text = f'{time_temp_list[0]}:{time_temp_list[1]}'
-		print("\t\t", instance, value)
 
 	def show_date_picker(self):
 		""" Открытие диалогого окна даты """
@@ -607,11 +637,10 @@ class TaskScreen(Screen):
 		date_dialog.open()
 
 	def on_save_date(self, instance, value, date_range):
-		print("\t<method> on_save_date")
+		print(f"\t<method> on_save_date: {value} {date_range}")
 
 		date_temp_list = str(value).split("-")
 		self.ids.date_label.text = f'{date_temp_list[0]}.{date_temp_list[1]}.{date_temp_list[2]}'
-		print("\t\t", instance, value, date_range)
 
 
 class RoleEditScreen(Screen):

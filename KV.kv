@@ -6,9 +6,33 @@
 
 # Специальная метка
 <SpecialLabel@MDLabel>:
-    # size_hint_x: 0.5  #t
     font_size: 25
     halign: 'center'
+
+
+# Кастомный Snackbar
+<CustomSnackbar>:
+    MDIcon:
+        # Позиционирование
+        pos_hint: {'center_y': 0.5}
+        
+        # Размеры
+        size_hint_x: 0.06
+        
+        # Оформление
+        icon: root.icon
+        text_color: 1,1,1,1
+        theme_text_color: "Custom"
+
+    MDLabel:
+        text: root.text
+        markup: True
+        font_size: root.font_size
+        shorten: True
+        shorten_from: 'right'
+        theme_text_color: "Custom"
+        pos_hint: {'center_x': 0.3, 'center_y': 0.5}
+
 
 <MDFillRoundFlatButton>:
     theme_text_color: root.theme_text_color   
@@ -186,8 +210,8 @@
   
                 MDList:
                     id: container
-                    padding : 10,75,10,120
-                    spacing : 10
+                    padding: 10, 75, 10, 120
+                    spacing: 10
 
         MDToolbar:
             id: toolbar
@@ -258,31 +282,39 @@
                 root.manager.current = 'start_screen'
 
         SpecialLabel:
+            # Текст
             text: "Вход"
             font_size: 50
             bold: True
 
+            # Позиционирование
             pos_hint: {'center_x': 0.5, 'center_y': 0.65}
 
+            # Оформление
             color: get_color_from_hex(colors["Teal"]["A700"])
 
         SpecialTextField:
-            id:login
+            id: login
             hint_text: "Логин"
             pos_hint: {'center_x': 0.5, 'center_y': 0.45}
 
         SpecialTextField:
-            id:password
+            id: password
             hint_text: "Пароль"
             pos_hint: {'center_x': 0.5, 'center_y': 0.35}
 
         MDFillRoundFlatButton:
+            # Текст
             text: "[color=#ffffff][b]ВОЙТИ[/b][/color]"
-            markup: True
-            pos_hint: {'center_x': 0.5, 'center_y': 0.2}
-            size_hint: 0.55, 0.07
             font_size: 22
-
+            markup: True
+            
+            # Позиционирование
+            pos_hint: {'center_x': 0.5, 'center_y': 0.2}
+            
+            # Размеры
+            size_hint: 0.55, 0.07
+            
             on_release:
                 root.log_in()
 
