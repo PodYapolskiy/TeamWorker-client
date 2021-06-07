@@ -23,3 +23,26 @@ def generate_string(unique=False) -> str:
 			login = ''.join([pickchar() for _ in range(10)])
 	
 	return login
+
+
+def convert_month(month: str) -> str:
+	"""Функция, переводящая значение `month` в строку с численным значением.\n
+		Пример:\n
+			convert_month('Apr') -> '04'
+	"""
+	monthes = {
+		'Jan': '01',
+		'Feb': '02',
+		'Mar': '03',
+		'Apr': '04',
+		'May': '05',
+		'Jun': '06',
+		'Jul': '07',
+		'Aug': '08',
+		'Sep': '09',
+		'Oct': '10',
+		'Nov': '11',
+		'Dec': '12',
+	}
+	return monthes[month]
+
