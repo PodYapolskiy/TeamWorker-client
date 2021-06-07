@@ -21,7 +21,7 @@
         
         # Оформление
         icon: root.icon
-        text_color: 1,1,1,1
+        text_color: 1, 1, 1, 1
         theme_text_color: "Custom"
 
     MDLabel:
@@ -63,15 +63,23 @@
 
         ThreeLineListItem:
             id: content
+
+            # Текст
             text: root.text
             secondary_text: root.secondary_text
             tertiary_text: root.tertiary_text
-            on_release: root.change_screen(root)
+            
+            # Размеры
+            size_hint_x: 0.75
+
+            on_release: root.open_task(root)
 
         RightCheckbox:
-            on_active: root.on_checkbox_active(*args, root)
-            pos_hint_x: 0.9
+            size_hint_x: 0.2
+            pos_hint_x: 0.8
+
             active: root.active
+            on_active: root.on_checkbox_active(*args, root)
 
 
 <UserCard>:
