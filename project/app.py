@@ -1,6 +1,7 @@
 import requests
 import json
 
+from typing import Tuple
 
 #* Обязательные заголовки без которых не работает
 headers = {
@@ -116,21 +117,21 @@ def log(data: dict) -> bool:
 
 
 #!!!
-def push_tasks_info(tasks: list):
+def push_tasks_info(tasks: list) -> bool:
+	"""Отправляет состояние списка задач на сервер в таком виде:\n
+		[
+			{
+				#?
+				"task_text":        str,
+				"task_users_login": List[str],
+				"task_users":       List[str],
+				"task_deadline":    datetime.datetime(),
+				"task_is_done":     bool
+			}
+		]
+	"""
 	print('\n<func> push_tasks_info')
-	"""
-		{
-			'tasks_data': [
-		           {
-		               "task_text":        str,
-		               "task_users_login": List[str],
-		               "task_users":       List[str],
-		               "task_deadline":    datetime.datetime(),
-		               "task_is_done":     bool
-		           }
-		       ]
-		}
-	"""
+
 	try:
 		r = requests.post(
 			url=f'{server_domain}/push_tasks_info',
@@ -141,24 +142,31 @@ def push_tasks_info(tasks: list):
 		print(f'\t"POST {server_domain}/push_tasks_info" {r.status_code}')
 		print(f"\t{r.text}")
 
+		if 400 > r.status_code > 199:
+			print(f'\tTrue\n')
+			return True
+		else:
+			print(f'\tFalse\n')
+			return False
+
 	except Exception as e:
 		print("\tОшибка в отправке задач\n", f"\t{e}\n")
-		return
+		return False
 
 
-def get_tasks_info(account_login: str) -> dict:
-	"""
-		{
-			'tasks_data': [
-				{
-					"task_text":        str
-					"task_user_logins": List[str] 
-					"task_user_names":  List[str]
-					"task_deadline":    datetime.datetime()
-					"task_is_done":     bool
-				}
-			]
-		}
+
+def get_tasks_info(account_login: str) -> Tuple[list, bool]:
+	"""Возвращает список задач в таком формате:\n
+		[
+			{
+				"task_id":          int
+				"task_text":        str
+				"task_user_logins": List[str] 
+				"task_user_names":  List[str]
+				"task_deadline":    datetime.datetime()
+				"task_is_done":     bool
+			}
+		]
 	"""
 	print('\n<func> get_tasks_info')
 
@@ -170,14 +178,14 @@ def get_tasks_info(account_login: str) -> dict:
 		)
 
 		print(f'\t"POST {server_domain}/get_tasks_info" {r.status_code}')
-		tasks: dict = json.loads(r.text)
-		print("tasks: ", json.dumps(tasks, indent=4, ensure_ascii=False), "\n")
+		tasks: list = json.loads(r.text)
+		print("tasks:\n", json.dumps(tasks, indent=4, ensure_ascii=False), "\n")
 
-		return tasks
+		return tasks, True
 
 	except Exception as e:
 		print("\tОшибка в получении словаря задач\n", f"\t{e}\n")
-		return {}
+		return [], False
 
 
 def get_team_users(account_login: str) -> dict:
@@ -224,3 +232,30 @@ def get_team_name(account_login: str) -> str:
 		print("\tОшибка входа\n", f"\t{e}\n")
 		return ''
 
+
+def change_task_state(id: int) -> bool:
+	"""Функция должна изменять состояние задачи по её `id`. Это оптимизирует работу приложения.
+		Возвращает булевое значение того, насколько удачно прошло изменение.
+	"""
+	print('\n<func> change_task_state')
+	
+	try:
+		r = requests.post(
+			url=f'{server_domain}/change_task_state',
+			data=json.dumps({"task_id": id}),
+			headers=headers
+		)
+
+		print(f'\t"POST {server_domain}/change_task_state" {r.status_code}')
+		print(f"\t{r.text}")
+
+		if 400 > r.status_code > 199:
+			print(f'\tTrue\n')
+			return True
+		else:
+			print(f'\tFalse\n')
+			return False
+
+	except Exception as e:
+		print("\tОшибка в изменении статуса задачи\n", f"\t{e}\n")
+		return False

@@ -24,7 +24,10 @@ from kivymd.uix.selectioncontrol import MDCheckbox
 from kivymd.uix.snackbar import BaseSnackbar
 
 # Импорт своих модулей из пакета project
-from project import sign, log, push_tasks_info, get_tasks_info, get_team_name, get_team_users, generate_string
+from project.app import sign, log
+from project.app import get_tasks_info, get_team_name, get_team_users
+from project.app import push_tasks_info, change_task_state
+from project.functions import generate_string, convert_month
 
 # Импорт других модулей
 import json
@@ -37,7 +40,8 @@ Window.size = (480, 840)
 Config.set('kivy', 'keyboard_mode', 'systemanddock')  # открытие клавиатуры при нажатиях с телефона
 
 delete_if_exit = True
-roles = []
+roles = []  # Глобальный список ролей
+tasks = []  # Глобальный список заданий  #???
 val1, val2, val3 = False, False, False
 
 
@@ -329,7 +333,7 @@ class LogInScreen(Screen):
 			)
 			snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
 			snackbar.open()
-			
+
 			if test:
 				self.manager.transition.direction = 'down'
 				self.manager.transition.duration = 0.5
@@ -416,21 +420,27 @@ class MainScreen(Screen):
 		class RightCheckbox(IRightBodyTouch, MDCheckbox):
 			pass
 
-		def change_screen(self, instance):
-			print("\t\t<method> change_screen")
+		def open_task(self, instance):
+			print("\t\t<method> open_task")
 
 			global task_box_id
 			global task_screen_link
-			global tasks
 			global task_box_id
 
+			tasks, flag = get_tasks_info(account_login)
+
 			self.set_task_box_id(instance)
+
 			task_screen_link.ids.text.text = tasks[task_box_id]["task_text"]
 			date_and_time = str(tasks[task_box_id]["task_deadline"]).split(" ")
-			date = str(date_and_time[0]).split("-")
-			time = str(date_and_time[1]).split(":")
-			task_screen_link.ids.time_label.text = f'{time[0]}:{time[1]}'
-			task_screen_link.ids.date_label.text = f'{date[0]}.{date[1]}.{date[2]}'
+
+			day, month, year = date_and_time[1:4]
+			hours, minutes = date_and_time[4].split(":")[:2]  # Из "15:30:00" в "15", "30"
+
+			task_screen_link.ids.time_label.text = f'{hours}:{minutes}'
+			task_screen_link.ids.date_label.text = f'{year}.{day}.{convert_month(month)}'
+
+			# Переход на экран редактирования и создания задач
 			screen_manager.current = "task_screen"
 			screen_manager.transition.direction = 'left'
 
@@ -443,7 +453,7 @@ class MainScreen(Screen):
 
 			children = main_screen_link.ids.container.children
 			task_box_id = len(children) - 1 - children.index(instance)
-			print(f"\t\t{task_box_id}")
+			print(f"\t\ttask_box_id: {task_box_id}")
 
 		def remove_card(self, instance):
 			print('\t\t<method> remove_card')
@@ -455,33 +465,50 @@ class MainScreen(Screen):
 
 			self.set_task_box_id(instance)
 			tasks.pop(task_box_id)
-			push_tasks_info(tasks)
+			#!!! push_tasks_info(tasks)
 			main_screen_link.ids.container.remove_widget(instance)
 
 		def on_checkbox_active(self, checkbox, value, instance):
+			"""Срабатывает при изменении состояния чекбокса"""
 			print("\t\t<method> on_checkbox_active")
+			print(f"\t\t\tvalue: {value}")
 
 			global task_box_id
-			global tasks
 			global account_login
 
+			tasks, flag = get_tasks_info(account_login)  #???
+			# flag будем настраивать, когда приложение будет готово
+			# Он нужен, чтобы корректно показывать пользователю, что именно не работает
+
 			self.set_task_box_id(instance)
-			print(f"\t\t\t{value}")
+			task: dict = tasks[task_box_id]  # Задача, у которой изменяется чекбокс
+
 			if value:
-				tasks[task_box_id]['task_is_done'] = 1
+				task['task_is_done'] = True
 				print("\t\t\tOn")
 			else:
-				tasks[task_box_id]['task_is_done'] = 0
+				task['task_is_done'] = False
 				print("\t\t\tOff")
 
-			push_tasks_info(tasks)
+			# Если не удалось успешно изменить статус выполнения задачи, возникаем предупреждение
+			if not change_task_state(task['task_id']):
+				snackbar = CustomSnackbar(
+					text="[color=#ffffff][b]Ошибка изменения статуса задачи[/b][/color]",
+					icon="information",
+					bg_color="#00BFA5",
+					snackbar_x="10dp",
+					snackbar_y="10dp",
+				)
+				snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+				snackbar.open()
 
 	def on_enter(self):
 		"""
 			tasks = [
 				{
+					"task_id":          int
 					"task_text":        str
-					"task_user_logins": List[str] 
+					"task_user_logins": List[str]
 					"task_user_names":  List[str]
 					"task_deadline":    datetime.datetime()
 					"task_is_done":     bool
@@ -495,7 +522,7 @@ class MainScreen(Screen):
 		# Если вход происходит сразу с SignInScreen, то пользователь - капитан
 		# Если с LogInScreen, то тот, который вошёл
 
-		global tasks
+		# global tasks  #???
 		
 		team_name = get_team_name(account_login)
 		if team_name != '':
@@ -504,8 +531,9 @@ class MainScreen(Screen):
 			# Если произошла ошибка в получении названия
 			self.ids.toolbar.title = "<ОШИБКА>"
 
-		tasks = get_tasks_info(account_login)
-		print(f"\ttasks: {tasks}")
+		#??? Запрос на сервер будет происходить только в display_tasks
+		# tasks, flag = get_tasks_info(account_login)
+		# print(f"\ttasks: {tasks}")
 
 		self.ids.container.clear_widgets()
 		self.display_tasks()
@@ -513,41 +541,62 @@ class MainScreen(Screen):
 	def display_tasks(self):
 		"""Обновляет список задач"""
 		print ("\t<method> display_tasks")
-		global tasks
+		global account_login
 
 		#// (test)
+		flag = False  # Переменная определяющая произошло ли получение задач удачно
 		if test:
 			date = datetime.utcnow()
 
 			year, month, day = str(date.date()).split('-')
 			hours, minutes = str(date.time()).split(':')[:2]
 
-			task_deadline = f"До: {day}.{month}.{year[2:]} {hours}:{minutes}"
+			task_deadline = f"Дедлайн: {day}.{month}.{year[2:]} {hours}:{minutes}"
 
-			tasks = {
-				'tasks_data': [
-					{
-						"task_text": "Текст задачи",
-						"task_user_logins": ["login_1", "login_2"],
-						"task_user_names": ["Толя", "Дима"],
-						"task_deadline": task_deadline,
-						"task_is_done": True
-					}
-				]
-			}
+			tasks = [
+				{
+					"task_text": "Текст задачи",
+					"task_user_logins": ["login_1", "login_2"],
+					"task_user_names": ["Толя", "Дима"],
+					"task_deadline": task_deadline,
+					"task_is_done": True
+				}
+			]
+			flag = True
 
-		for task in tasks['tasks_data']:
-			users = [user for user in task["task_user_names"]]  # Добавляем исполняющих задачу
+		tasks, flag = get_tasks_info(account_login)
 
-			# Добавляем карточку с заданием
-			self.ids.container.add_widget(
-				self.TaskCard(
-						text=task["task_text"],
-						secondary_text=', '.join(users),  # Строка исполнителей с разделителем ', '
-						tertiary_text=str(task["task_deadline"]),
-						active=bool(task["task_is_done"])
+		# Если получение прошло без ошибок
+		if flag:
+			for task in tasks:
+				users = [user for user in task["task_user_names"]]  # Добавляем исполняющих задачу
+
+				date = task["task_deadline"]
+
+				day, month, year, time = str(date).split(" ")[1:-1]
+				hours, minutes = time.split(':')[:2]
+				task_deadline = f"Дедлайн: {day}.{convert_month(month)}.{year[2:]} {hours}:{minutes}"
+
+				# Добавляем карточку с заданием
+				self.ids.container.add_widget(
+					self.TaskCard(
+							text=task["task_text"],
+							secondary_text=', '.join(users),  # Строка исполнителей с разделителем ', '
+							tertiary_text=task_deadline,
+							active=bool(task["task_is_done"])
+					)
 				)
+		# Если при получении произошла ошибка
+		else:
+			snackbar = CustomSnackbar(
+				text="[color=#ffffff][b]Ошибка получения задач[/b][/color]",
+				icon="information",
+				bg_color="#00BFA5",
+				snackbar_x="10dp",
+				snackbar_y="10dp",
 			)
+			snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+			snackbar.open()
 
 	def change_box_id(self):
 		print("\t<method> change_box_id")
@@ -607,7 +656,7 @@ class TaskScreen(Screen):
 		# print(f"\t\t{tasks}")
 		print("tasks: \n", json.dumps(tasks, indent=4, ensure_ascii=False))
 
-		# push_tasks_info(tasks)
+		#!!! push_tasks_info(tasks)
 
 		self.ids.warning_label.text = ""
 		screen_manager.transition.direction = 'right'
@@ -793,7 +842,7 @@ class TaskMembersScreen(Screen):
 				tasks[task_member_box_id]["task_users"].pop([tasks.index(team_users["users_names"][task_member_box_id])])
 				print("\t\t\tOff")
 
-			push_tasks_info(tasks)
+			#!!! push_tasks_info(tasks) 
 
 	def on_enter(self):
 		print("<class> TaskMembersScreen")
