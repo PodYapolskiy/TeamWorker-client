@@ -116,30 +116,26 @@ def log(data: dict) -> bool:
 		return False
 
 
-#!!!
-def push_tasks_info(tasks: list) -> bool:
-	"""Отправляет состояние списка задач на сервер в таком виде:\n
-		[
-			{
-				#?
-				"task_text":        str,
-				"task_users_login": List[str],
-				"task_users":       List[str],
-				"task_deadline":    datetime.datetime(),
-				"task_is_done":     bool
-			}
-		]
+def push_task_info(task: dict) -> bool:
+	"""Отправляет задачу на сервер в таком виде:\n
+		{
+			"task_text":        str,
+			"task_users_login": List[str],
+			"task_users":       List[str],
+			"task_deadline":    str,
+			"task_is_done":     bool
+		}
 	"""
 	print('\n<func> push_tasks_info')
 
 	try:
 		r = requests.post(
-			url=f'{server_domain}/push_tasks_info',
-			data=json.dumps(tasks),
+			url=f'{server_domain}/push_task_info',
+			data=json.dumps(task),
 			headers=headers
 		)
 
-		print(f'\t"POST {server_domain}/push_tasks_info" {r.status_code}')
+		print(f'\t"POST {server_domain}/push_task_info" {r.status_code}')
 		print(f"\t{r.text}")
 
 		if 400 > r.status_code > 199:
@@ -150,9 +146,8 @@ def push_tasks_info(tasks: list) -> bool:
 			return False
 
 	except Exception as e:
-		print("\tОшибка в отправке задач\n", f"\t{e}\n")
+		print("\tОшибка в добавлении задачи\n", f"\t{e}\n")
 		return False
-
 
 
 def get_tasks_info(account_login: str) -> Tuple[list, bool]:

@@ -26,7 +26,7 @@ from kivymd.uix.snackbar import BaseSnackbar
 # Импорт своих модулей из пакета project
 from project.app import sign, log
 from project.app import get_tasks_info, get_team_name, get_team_users
-from project.app import push_tasks_info, change_task_state
+from project.app import push_task_info, change_task_state
 from project.functions import generate_string, convert_month
 
 # Импорт других модулей
@@ -624,20 +624,19 @@ class TaskScreen(Screen):
 
 	def make_task(self):
 		print("\t<method> make_task")
-		global tasks
 		global task_box_id  # Глобальный id-шник заданий. Равен количеству заданий.
 
 		if self.ids.text.text == "" or self.ids.time_label.text == "HH.MM" or self.ids.date_label.text == "YYYY.DD.MM":
 			self.ids.warning_label.text = "Введите все данные"
 		else:
-			time_list = str(self.ids.time_label.text).split(':')
-			date_list = str(self.ids.date_label.text).split('.')
+			date = self.ids.date_label.text
+			time = self.ids.time_label.text
 
 			task = {
 				"task_text": str(self.ids.text.text),
-				"task_users_login": ["user1_login", "user2_login"],  #!!!
-				"task_users": ["Пользователь 1", "Пользователь 2"],  #!!!
-				"task_deadline": datetime(int(date_list[0]), int(date_list[1]), int(date_list[2]), int(time_list[0]), int(time_list[1])),
+				"task_users_login": ["52KCB87OKQ"],  #!!!
+				"task_users": ["Толя"],  #!!!
+				"task_deadline": date + " " + time,  # "2021.06.07 00:00"
 				"task_is_done": False
 			}
 
@@ -647,21 +646,24 @@ class TaskScreen(Screen):
 			# 	"users_names": []
 			# }
 
+			#???
+			tasks, flag = get_tasks_info(account_login)
+
 		#???
 		if len(tasks) != task_box_id:
 			print("????????????????????????????")
 			tasks.pop(task_box_id)
 
-		#!!! tasks.insert(task_box_id, task)
-		# print(f"\t\t{tasks}")
-		print("tasks: \n", json.dumps(tasks, indent=4, ensure_ascii=False))
+		# print("tasks: \n", json.dumps(tasks, indent=4, ensure_ascii=False))
 
-		#!!! push_tasks_info(tasks)
-
-		self.ids.warning_label.text = ""
-		screen_manager.transition.direction = 'right'
-		screen_manager.transition.duration = 0.5
-		screen_manager.current = 'main_screen'
+		# В функцию пуша будем класть одну задачу и отправлять на сервер
+		if push_task_info(task):
+			self.ids.warning_label.text = ""
+			screen_manager.transition.direction = 'right'
+			screen_manager.transition.duration = 0.5
+			screen_manager.current = 'main_screen'
+		else:
+			pass
 
 	def show_time_picker(self):
 		""" Открытие диалогого окна времени """
@@ -689,7 +691,7 @@ class TaskScreen(Screen):
 		print(f"\t<method> on_save_date: {value} {date_range}")
 
 		date_temp_list = str(value).split("-")
-		self.ids.date_label.text = f'{date_temp_list[0]}.{date_temp_list[1]}.{date_temp_list[2]}'
+		self.ids.date_label.text = f'{date_temp_list[0]}.{date_temp_list[2]}.{date_temp_list[1]}'
 
 
 class RoleEditScreen(Screen):
