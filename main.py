@@ -26,7 +26,7 @@ from kivymd.uix.snackbar import BaseSnackbar
 # Импорт своих модулей из пакета project
 from project.app import sign, log
 from project.app import get_tasks_info, get_team_name, get_team_users
-from project.app import push_task_info, change_task_state
+from project.app import push_task_info, change_task_state, remove_task
 from project.functions import generate_string, convert_month
 
 # Импорт других модулей
@@ -424,15 +424,16 @@ class MainScreen(Screen):
 
 			global task_box_id
 			global task_screen_link
-			global task_box_id
 
 			tasks, flag = get_tasks_info(account_login)
 
 			self.set_task_box_id(instance)
+			task = tasks[task_box_id]  # Конкретно эта задача
 
-			task_screen_link.ids.text.text = tasks[task_box_id]["task_text"]
-			date_and_time = str(tasks[task_box_id]["task_deadline"]).split(" ")
+			task_screen_link.ids.text.text = task["task_text"]
+			task_screen_link.ids.members_label.text = ", ".join(task['task_user_names'])
 
+			date_and_time = str(task["task_deadline"]).split(" ")
 			day, month, year = date_and_time[1:4]
 			hours, minutes = date_and_time[4].split(":")[:2]  # Из "15:30:00" в "15", "30"
 
@@ -451,21 +452,46 @@ class MainScreen(Screen):
 			global main_screen_link
 
 			children = main_screen_link.ids.container.children
-			task_box_id = len(children) - 1 - children.index(instance)
-			print(f"\t\ttask_box_id: {task_box_id}")
+			task_box_id = len(children) - 1 - children.index(instance)  #* Индексы считаются 'снизу'
+			print(f"\t\t\ttask_box_id: {task_box_id}")
 
 		def remove_card(self, instance):
 			print('\t\t<method> remove_card')
 
 			global main_screen_link
-			#!!! global tasks
 			global account_login
 			global task_box_id
 
 			self.set_task_box_id(instance)
-			#!!! tasks.pop(task_box_id)
-			#!!! push_tasks_info(tasks)
-			main_screen_link.ids.container.remove_widget(instance)
+			tasks, flag = get_tasks_info(account_login)
+
+			'''Сделать через нахождения того же текста задачи
+				# for task in main_screen_link.ids.container.children:
+				# 	print(f"\t\t\t{task.text}")
+
+				# for task in tasks:
+				# 	print(f"\t\t\t{task['task_text']}")
+				
+				# print(f"tasks[{task_box_id}]:\n", json.dumps(tasks[task_box_id], indent=4, ensure_ascii=False), "\n")
+
+				# for index, task in enumerate(tasks[::-1]):
+				# 	if task['task_text'] == instance.text:
+				# 		pass
+				# 	print(f"\t\t\t{task['task_deadline']}")
+			'''
+
+			if remove_task(tasks[task_box_id]['task_id']):
+				main_screen_link.ids.container.remove_widget(instance)
+			else:
+				snackbar = CustomSnackbar(
+					text="[color=#ffffff][b]Ошибка удаления задачи[/b][/color]",
+					icon="information",
+					bg_color="#00BFA5",
+					snackbar_x="10dp",
+					snackbar_y="10dp",
+				)
+				snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+				snackbar.open()
 
 		def on_checkbox_active(self, checkbox, value, instance):
 			"""Срабатывает при изменении состояния чекбокса"""

@@ -140,7 +140,7 @@ def get_tasks_info(account_login: str) -> Tuple[list, bool]:
 
 		print(f'\t"POST {server_domain}/get_tasks_info" {r.status_code}')
 		tasks: list = json.loads(r.text)
-		print("tasks:\n", json.dumps(tasks, indent=4, ensure_ascii=False), "\n")
+		# print("tasks:\n", json.dumps(tasks, indent=4, ensure_ascii=False), "\n")
 
 		return tasks, True
 
@@ -253,4 +253,29 @@ def change_task_state(id: int) -> bool:
 
 	except Exception as e:
 		print("\tОшибка в изменении статуса задачи\n", f"\t{e}\n")
+		return False
+
+
+def remove_task(id: int) -> bool:
+	"""Удаление задачи по id."""
+	print('\n<func> remove_task')
+	
+	try:
+		r = requests.post(
+			url=f'{server_domain}/remove_task',
+			data=json.dumps({"task_id": id}),
+			headers=headers
+		)
+
+		print(f'\t"POST {server_domain}/remove_task" {r.status_code}')
+		print(f"\t{r.text}")
+
+		if 400 > r.status_code > 199:
+			print(f'\tTrue\n')
+			return True
+		else:
+			print(f'\tFalse\n')
+
+	except Exception as e:
+		print("\tОшибка при удалении задачи\n", f"\t{e}\n")
 		return False
