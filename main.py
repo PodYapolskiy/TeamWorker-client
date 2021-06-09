@@ -874,36 +874,22 @@ class TaskMembersScreen(Screen):
 		user_names = team_users['user_names']
 		user_roles = team_users['user_roles']
 
-		#! Вероятно можно в один цикл запихнуть
-		# Новая задача
-		if (main_screen_link.get_tasks_length()) <= task_box_id:  # ==
-			
-			# Создаёт карточки с участниками, где есть их имена и роли
-			for i in range(len(user_names)):
-				self.ids.container.add_widget(
-					self.UserCard(
-						text=user_names[i],
-						secondary_text=user_roles[i],
-						active=False
-					)
-				)
+		tasks, flag = get_tasks_info(account_login)
 
-		# Уже созданная задача
-		else:
-			tasks, flag = get_tasks_info(account_login)  # Не тот flag, который используется дальше
+		for i in range(len(user_names)):
 
-			for i in range(len(user_names)):
-				flag = False
+			flag = False
+			if (main_screen_link.get_tasks_length()) > task_box_id:
 				if user_names[i] in tasks[task_box_id]['task_user_names']:
 					flag = True
 
-				self.ids.container.add_widget(
-					self.UserCard(
-						text=user_names[i],
-						secondary_text=user_roles[i],
-						active=flag
-					)
+			self.ids.container.add_widget(
+				self.UserCard(
+					text=user_names[i],
+					secondary_text=user_roles[i],
+					active=flag
 				)
+			)
 
 	@classmethod
 	def get_task_users_logins(cls):
