@@ -602,6 +602,10 @@ class MainScreen(Screen):
 		global task_box_id
 		task_box_id = len(self.ids.container.children)
 
+	def get_tasks_length(self) -> int:
+		"""Возвращает количество задач"""
+		return len(self.ids.container.children)
+
 	@staticmethod
 	def back_to_start():
 		print('<staticmethod> back_to_start\n')
@@ -829,8 +833,6 @@ class TaskMembersScreen(Screen):
 
 		def on_checkbox_active(self, checkbox, value, instance):
 			print("\t\t<method> on_checkbox_active")
-			global account_login  #???
-
 			global user_logins
 			global task_members_screen_link
 
@@ -851,11 +853,12 @@ class TaskMembersScreen(Screen):
 		global account_login
 		global user_logins
 
+		global main_screen_link
 		global task_box_id
 
-		print(f"task_member_dict: {self.get_task_users_logins()}")
-		print("task_box_id: ", task_box_id)
-		#TODO: Сделать разделение: 1) Если новая задача  2) Если уже существующуя
+		print(f"\ttask_member_dict: {self.get_task_users_logins()}")
+		print("\ttask_box_id: ", task_box_id)
+		print(f"\tlen: {main_screen_link.get_tasks_length()}")
 
 		team_name = get_team_name(account_login)
 		if team_name != '':
@@ -865,18 +868,18 @@ class TaskMembersScreen(Screen):
 
 		self.ids.container.clear_widgets()
 
-		if True:  # Новая задача
-			team_users = get_team_users(account_login)
+		team_users = get_team_users(account_login)
 
-			user_logins = team_users['user_logins']
-			user_names = team_users['user_names']
-			user_roles = team_users['user_roles']
-			# print(user_logins)
-			# print(user_names)
-			# print(user_roles)
+		user_logins = team_users['user_logins']
+		user_names = team_users['user_names']
+		user_roles = team_users['user_roles']
+
+		#! Вероятно можно в один цикл запихнуть
+		# Новая задача
+		if (main_screen_link.get_tasks_length()) <= task_box_id:  # ==
 			
-			# Создаёи карточки с участниками, где есть их имена и роли
-			for i in range(len(user_logins)):
+			# Создаёт карточки с участниками, где есть их имена и роли
+			for i in range(len(user_names)):
 				self.ids.container.add_widget(
 					self.UserCard(
 						text=user_names[i],
@@ -885,21 +888,22 @@ class TaskMembersScreen(Screen):
 					)
 				)
 
-		else:  # Если уже сохданная задача
-			#???
-			tasks, flag = get_tasks_info(account_login)
-			pass
-		# for user in team_users["user_names"]:
-		# 	if user in tasks[task_box_id]["task_users"]:
-		# 		user_in_task = True
-		# 	else:
-		# 		user_in_task = False
-		# 	self.ids.container.add_widget(
-		# 		self.UserCard(
-		# 				text=user,
-		# 				active=bool(user_in_task)
-		# 			)
-		# 		)
+		# Уже созданная задача
+		else:
+			tasks, flag = get_tasks_info(account_login)  # Не тот flag, который используется дальше
+
+			for i in range(len(user_names)):
+				flag = False
+				if user_names[i] in tasks[task_box_id]['task_user_names']:
+					flag = True
+
+				self.ids.container.add_widget(
+					self.UserCard(
+						text=user_names[i],
+						secondary_text=user_roles[i],
+						active=flag
+					)
+				)
 
 	@classmethod
 	def get_task_users_logins(cls):
