@@ -95,14 +95,22 @@
 
     MDCardSwipeFrontBox:
 
-        OneLineListItem:
+        TwoLineListItem:
             id: content
+
+            # Текст
             text: root.text
+            secondary_text: root.secondary_text
+
+            # Размеры
+            size_hint_x: 0.75
 
         RightCheckbox:
-            on_active: root.on_checkbox_active(*args, root)
-            pos_hint_x: 0.9
+            size_hint_x: 0.2
+            pos_hint_x: 0.8
             active: root.active
+
+            on_active: root.on_checkbox_active(*args, root)
 
 
 <SwipeToDeleteItem>:
@@ -484,11 +492,11 @@
 # Экран создания задач
 <TaskScreen>:
     text: text
-    time: time
+    members_label: members_label
     time_label: time_label
-    button: button
-    label: label
+    date_label: date_label
     warning_label: warning_label
+    button: button
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
 
@@ -532,42 +540,88 @@
             size_hint_x: .6
 
         MDRaisedButton:
-            id: time
-            text: "[color=#ffffff][b]Список пользователей\n(в разработке)[/b][/color]"
+            id: members
 
-            pos_hint: {'center_x': .5, 'center_y': .5}
+            # Текст
+            text: "[color=#ffffff][b]Участники задачи[/b][/color]"
+            
+            # Позиционирование
+            pos_hint: {'center_x': 0.325, 'center_y': 0.5}
+            
+            # Размеры
+            size_hint: 0.3, 0.05
 
-            #!!!
-            # on_release:
-            #     root.manager.transition.direction = 'right'
-            #     root.manager.transition.duration = 0.5
-            #     root.manager.current = 'task_members_screen'
+            on_release:
+                root.manager.transition.direction = 'left'
+                root.manager.transition.duration = 0.5
+                root.manager.current = 'task_members_screen'
 
+        SpecialLabel:
+            id: members_label
+
+            # Текст
+            text: "..."
+            halign: 'left'
+            
+            # Позиционирование
+            pos_hint: {'center_x': 0.75, 'center_y': 0.5}
+            
+            # Размеры
+            size_hint: 0.4, 0.05
+            
         MDRaisedButton:
             id: time
-            text: "[color=#ffffff][b]Изменить время[/b][/color]"
 
-            pos_hint: {'center_x': .3, 'center_y': .4}
+            # Текст
+            text: "[color=#ffffff][b]Изменить время[/b][/color]"
+            
+            # Позиционирование
+            pos_hint: {'center_x': .325, 'center_y': .4}
+            
+            # Размеры
+            size_hint: 0.3, 0.05
+
             on_release: root.show_time_picker()
 
         SpecialLabel:
             id: time_label
-            text: "HH:MM"
 
-            pos_hint: {'center_x': 0.7, 'center_y': 0.4}
+            # Текст
+            text: "HH:MM"
+            halign: 'left'
+            
+            # Позиционирование
+            pos_hint: {'center_x': 0.75, 'center_y': 0.4}
+            
+            # Размеры
+            size_hint: 0.4, 0.05
 
         MDRaisedButton:
             id: date
-            text: "[color=#ffffff][b]Изменить дату[/b][/color]"
 
-            pos_hint: {'center_x': .3, 'center_y': .3}
+            # Текст
+            text: "[color=#ffffff][b]Изменить дату[/b][/color]"
+            
+            # Позиционирование
+            pos_hint: {'center_x': .325, 'center_y': .3}
+            
+            # Размеры
+            size_hint: 0.3, 0.05
+
             on_release: root.show_date_picker()
 
         SpecialLabel:
             id: date_label
-            text: "YYYY.DD.MM"
 
-            pos_hint: {'center_x': 0.7, 'center_y': 0.3}
+            # Текст
+            text: "YYYY.DD.MM"
+            halign: 'left'
+            
+            # Позиционирование
+            pos_hint: {'center_x': 0.75, 'center_y': 0.3}
+            
+            # Размеры
+            size_hint: 0.4, 0.05
 
         SpecialLabel:
             id: warning_label
@@ -824,8 +878,8 @@
   
                 MDList:
                     id: container
-                    padding : 10, 75, 10, 120
-                    spacing : 10
+                    padding: 10, 75, 10, 120
+                    spacing: 10
 
         MDToolbar:
             id: toolbar
@@ -837,5 +891,5 @@
             pos_hint: {'top': 1.0}
             anchor_title: 'center'
             
-            left_action_items: [["arrow-left", lambda x: root.back_to_start()]]
-            right_action_items: [["tip", lambda x: root.accept_changes()]]
+            left_action_items: [["arrow-left", lambda x: root.back_to_task(), "Назад"]]
+            right_action_items: [["content-save", lambda x: root.accept_changes(), "Сохранить изменения"]]

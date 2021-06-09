@@ -41,7 +41,6 @@ Config.set('kivy', 'keyboard_mode', 'systemanddock')  # открытие кла�
 
 delete_if_exit = True
 roles = []  # Глобальный список ролей
-tasks = []  # Глобальный список заданий  #???
 val1, val2, val3 = False, False, False
 
 
@@ -459,12 +458,12 @@ class MainScreen(Screen):
 			print('\t\t<method> remove_card')
 
 			global main_screen_link
-			global tasks
+			#!!! global tasks
 			global account_login
 			global task_box_id
 
 			self.set_task_box_id(instance)
-			tasks.pop(task_box_id)
+			#!!! tasks.pop(task_box_id)
 			#!!! push_tasks_info(tasks)
 			main_screen_link.ids.container.remove_widget(instance)
 
@@ -521,8 +520,6 @@ class MainScreen(Screen):
 		# Тот пользователь, который входит (глобальная переменная)
 		# Если вход происходит сразу с SignInScreen, то пользователь - капитан
 		# Если с LogInScreen, то тот, который вошёл
-
-		# global tasks  #???
 		
 		team_name = get_team_name(account_login)
 		if team_name != '':
@@ -530,10 +527,6 @@ class MainScreen(Screen):
 		else: 
 			# Если произошла ошибка в получении названия
 			self.ids.toolbar.title = "<ОШИБКА>"
-
-		#??? Запрос на сервер будет происходить только в display_tasks
-		# tasks, flag = get_tasks_info(account_login)
-		# print(f"\ttasks: {tasks}")
 
 		self.ids.container.clear_widgets()
 		self.display_tasks()
@@ -543,27 +536,7 @@ class MainScreen(Screen):
 		print ("\t<method> display_tasks")
 		global account_login
 
-		#// (test)
-		flag = False  # Переменная определяющая произошло ли получение задач удачно
-		if test:
-			date = datetime.utcnow()
-
-			year, month, day = str(date.date()).split('-')
-			hours, minutes = str(date.time()).split(':')[:2]
-
-			task_deadline = f"Дедлайн: {day}.{month}.{year[2:]} {hours}:{minutes}"
-
-			tasks = [
-				{
-					"task_text": "Текст задачи",
-					"task_user_logins": ["login_1", "login_2"],
-					"task_user_names": ["Толя", "Дима"],
-					"task_deadline": task_deadline,
-					"task_is_done": True
-				}
-			]
-			flag = True
-
+		# flag - Переменная определяющая произошло ли получение задач удачно
 		tasks, flag = get_tasks_info(account_login)
 
 		# Если получение прошло без ошибок
@@ -618,52 +591,63 @@ class MainScreen(Screen):
 
 
 class TaskScreen(Screen):
-	
+	_task_users_login = []  # Нужна для обмена списка логинов с <TaskMembersScreen>
+
 	def on_enter(self):
 		print("<class> TaskScreen")
+
+	def find_errors(self) -> bool:
+		"""Ищет ошибки. Удобнее было перенести логику в отдельный метод."""
+		if (self.ids.text.text == "") or (self.ids.time_label.text  == "HH.MM")  or (self.ids.date_label.text == "YYYY.DD.MM") or (self.ids.members_label.text == "..."):
+			return True
+		return False
 
 	def make_task(self):
 		print("\t<method> make_task")
 		global task_box_id  # Глобальный id-шник заданий. Равен количеству заданий.
+		global account_login
 
-		if self.ids.text.text == "" or self.ids.time_label.text == "HH.MM" or self.ids.date_label.text == "YYYY.DD.MM":
-			self.ids.warning_label.text = "Введите все данные"
+		if self.find_errors():
+			# self.ids.warning_label.text = "Введите все данные"
+			snackbar = CustomSnackbar(
+				text="[color=#ffffff][b]Введите все данные[/b][/color]",
+				icon="information",
+				bg_color="#00BFA5",
+				snackbar_x="10dp",
+				snackbar_y="10dp",
+			)
+			snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+			snackbar.open()
 		else:
 			date = self.ids.date_label.text
 			time = self.ids.time_label.text
 
 			task = {
 				"task_text": str(self.ids.text.text),
-				"task_users_login": ["52KCB87OKQ"],  #!!!
-				"task_users": ["Толя"],  #!!!
+				# Сюда запишутся все ключи-логины из поля '__task_users_login' класса <TaskMembersScreen>
+				"task_users_login": self._task_users_login,
 				"task_deadline": date + " " + time,  # "2021.06.07 00:00"
 				"task_is_done": False
 			}
+			# print(json.dumps(task, indent=4, ensure_ascii=False))
 
-			# get_team_users(account_login)
-			# {
-			# 	"users_logins": []
-			# 	"users_names": []
-			# }
-
-			#???
-			tasks, flag = get_tasks_info(account_login)
-
-		#???
-		if len(tasks) != task_box_id:
-			print("????????????????????????????")
-			tasks.pop(task_box_id)
-
-		# print("tasks: \n", json.dumps(tasks, indent=4, ensure_ascii=False))
-
-		# В функцию пуша будем класть одну задачу и отправлять на сервер
-		if push_task_info(task):
-			self.ids.warning_label.text = ""
-			screen_manager.transition.direction = 'right'
-			screen_manager.transition.duration = 0.5
-			screen_manager.current = 'main_screen'
-		else:
-			pass
+			# В функцию пуша будем класть одну задачу и отправлять на сервер
+			if push_task_info(task):
+				self.ids.warning_label.text = ""
+				self._task_users_login.clear()  # Обязательно очищаем этот список
+				screen_manager.transition.direction = 'right'
+				screen_manager.transition.duration = 0.5
+				screen_manager.current = 'main_screen'
+			else:
+				snackbar = CustomSnackbar(
+					text="[color=#ffffff][b]Ошибка создания задачи[/b][/color]",
+					icon="information",
+					bg_color="#00BFA5",
+					snackbar_x="10dp",
+					snackbar_y="10dp",
+				)
+				snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+				snackbar.open()
 
 	def show_time_picker(self):
 		""" Открытие диалогого окна времени """
@@ -805,75 +789,146 @@ class InfoScreen(Screen):
 
 
 class TaskMembersScreen(Screen):
+	__task_users_login = {}  # Логины пользователей участвующих в задаче: {'some_login': 'some_name'}
+	__temp_dictionary = {}  # Буферный словарь. Сохраняем сюда изменения и затем либо применяем к главному словарю, либо нет
 
 	class UserCard(MDCardSwipe, Screen):
-		""" Класс карточки с пользователем ( и в будующем возможно задания ) """
+		"""Класс карточки с пользователем"""
 		text = StringProperty()
+		secondary_text = StringProperty()
 		active = BooleanProperty()
 
 		class RightCheckbox(IRightBodyTouch, MDCheckbox):
 			pass
 
-		def set_task_box_id(self, instance):
-			""" Функция, определяющая айдишник карточки """
-			print("\t\t<method> set_user_box_id")
-
-			global task_member_box_id
-			global task_members_screen_link
-
-			children = task_members_screen_link.ids.container.children
-			task_member_box_id = len(children) - 1 - children.index(instance)
-			print("\t\t\t", task_member_box_id)
-
 		def on_checkbox_active(self, checkbox, value, instance):
 			print("\t\t<method> on_checkbox_active")
-			global task_member_box_id
-			global tasks
-			global account_login
-			global team_users
+			global account_login  #???
 
-			self.set_task_box_id(instance)
+			global user_logins
+			global task_members_screen_link
+
+			task_member_index = task_members_screen_link.ids.container.children.index(instance)
 			print(f"\t\t\t{value}")
-
 			if value:
-				tasks[task_member_box_id]["task_users_login"].append(team_users["users_logins"][task_member_box_id])
-				tasks[task_member_box_id]["task_users"].append(team_users["users_names"][task_member_box_id])
+				TaskMembersScreen().add_to_task_users_logins(
+					login=user_logins[task_member_index], 
+					name=instance.ids.content.text
+				)
 				print("\t\t\tOn")
 			else:
-				tasks[task_member_box_id]["task_users_login"].pop([tasks.index(team_users["users_logins"][task_member_box_id])])
-				tasks[task_member_box_id]["task_users"].pop([tasks.index(team_users["users_names"][task_member_box_id])])
+				TaskMembersScreen().del_from_task_users_logins(login=user_logins[task_member_index])
 				print("\t\t\tOff")
-
-			#!!! push_tasks_info(tasks) 
 
 	def on_enter(self):
 		print("<class> TaskMembersScreen")
-		global team_users
+		global account_login
+		global user_logins
+
 		global task_box_id
-		global tasks
+
+		print(f"task_member_dict: {self.get_task_users_logins()}")
+		print("task_box_id: ", task_box_id)
+		#TODO: Сделать разделение: 1) Если новая задача  2) Если уже существующуя
+
+		team_name = get_team_name(account_login)
+		if team_name != '':
+			self.ids.toolbar.title = team_name
+		else:
+			self.ids.toolbar.title = "<ОШИБКА>"
 
 		self.ids.container.clear_widgets()
-		team_users = get_team_users(account_login)
-		for user in team_users["users_names"]:
-			if user in tasks[task_box_id]["task_users"]:
-				user_in_task = True
-			else:
-				user_in_task = False
-			self.ids.container.add_widget(
-				self.UserCard(
-						text=user,
-						active=bool(user_in_task)
+
+		if True:  # Новая задача
+			team_users = get_team_users(account_login)
+
+			user_logins = team_users['user_logins']
+			user_names = team_users['user_names']
+			user_roles = team_users['user_roles']
+			# print(user_logins)
+			# print(user_names)
+			# print(user_roles)
+			
+			# Создаёи карточки с участниками, где есть их имена и роли
+			for i in range(len(user_logins)):
+				self.ids.container.add_widget(
+					self.UserCard(
+						text=user_names[i],
+						secondary_text=user_roles[i],
+						active=False
 					)
 				)
 
-	def accept_changes(self): ...
+		else:  # Если уже сохданная задача
+			#???
+			tasks, flag = get_tasks_info(account_login)
+			pass
+		# for user in team_users["user_names"]:
+		# 	if user in tasks[task_box_id]["task_users"]:
+		# 		user_in_task = True
+		# 	else:
+		# 		user_in_task = False
+		# 	self.ids.container.add_widget(
+		# 		self.UserCard(
+		# 				text=user,
+		# 				active=bool(user_in_task)
+		# 			)
+		# 		)
 
-	@staticmethod
-	def back_to_start():
-		print('\t<staticmethod> back_to_start\n')
-		screen_manager.transition.direction = 'up'
+	@classmethod
+	def get_task_users_logins(cls):
+		print("\t<classmethod> get_task_users_logins")
+		return cls.__task_users_login
+
+	@classmethod
+	def add_to_task_users_logins(cls, login, name):
+		print("\t<classmethod> add_to_task_users_logins")
+		cls.__temp_dictionary[login] = name
+		print(f"\t\t{cls.__temp_dictionary}")  #// (test)
+	
+	@classmethod
+	def del_from_task_users_logins(cls, login):
+		print("\t<classmethod> del_from_task_users_logins")
+		if login in cls.__temp_dictionary.keys():
+			cls.__temp_dictionary.pop(login)
+		print(f"\t\t{cls.__temp_dictionary}")  #// (test)
+
+	@classmethod
+	def accept_changes(cls):
+		"""Копирует изменения из временного словаря в постоянный"""
+		cls.__task_users_login = cls.__temp_dictionary.copy()
+
+		snackbar = CustomSnackbar(
+			text="[color=#ffffff][b]Изменения сохранены[/b][/color]",
+			icon="information",
+			bg_color="#00BFA5",
+			snackbar_x="10dp",
+			snackbar_y="10dp",
+		)
+		snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+		snackbar.open()
+
+		global task_screen_link
+		task_members = ", ".join(cls.__task_users_login.values())  # 'Толя, Дима'
+		if task_members == '':
+			task_screen_link.ids.members_label.text = '...'
+		else:
+			task_screen_link.ids.members_label.text = task_members
+
+	@classmethod
+	def back_to_task(cls):
+		print('\t<staticmethod> back_to_task\n')
+
+		global task_screen_link
+		task_screen_link._task_users_login = list(cls.__task_users_login.keys())
+
+		# Очищаем словари
+		cls.__task_users_login.clear()
+		cls.__temp_dictionary.clear()
+
+		screen_manager.transition.direction = 'right'
 		screen_manager.transition.duration = 0.5
-		screen_manager.current = 'start_screen'
+		screen_manager.current = 'task_screen'
 
 
 Builder.load_file("KV.kv")
