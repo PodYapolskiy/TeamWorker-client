@@ -204,7 +204,7 @@ def push_task_info(task: dict) -> bool:
 			"task_is_done":     bool
 		}
 	"""
-	print('\n<func> push_tasks_info')
+	print('\n<func> push_task_info')
 
 	try:
 		r = requests.post(
@@ -225,6 +225,44 @@ def push_task_info(task: dict) -> bool:
 
 	except Exception as e:
 		print("\tОшибка в добавлении задачи\n", f"\t{e}\n")
+		return False
+
+
+def edit_task_info(task: dict) -> bool:
+	"""Редактирует задачу задачу на сервер в виде словаря с изменениями, если они были:\n
+		{
+			"task_id":          int
+			"task_text":        str | None,
+			"task_users_login": List[str] | None,
+			"task_deadline":    str | None
+		}
+	"""
+	print('\n<func> edit_task_info')
+	print(json.dumps(task, indent=4, ensure_ascii=False))
+
+	# Если изменений не было
+	if list(task.values()).count(None) == 3:
+		return True
+
+	try:
+		r = requests.post(
+			url=f'{server_domain}/edit_task_info',
+			data=json.dumps(task),
+			headers=headers
+		)
+
+		print(f'\t"POST {server_domain}/edit_task_info" {r.status_code}')
+		print(f"\t{r.text}")
+
+		if 400 > r.status_code > 199:
+			print(f'\tTrue\n')
+			return True
+		else:
+			print(f'\tFalse\n')
+			return False
+
+	except Exception as e:
+		print("\tОшибка редактирования задачи\n", f"\t{e}\n")
 		return False
 
 

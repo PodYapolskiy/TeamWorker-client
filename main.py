@@ -26,7 +26,7 @@ from kivymd.uix.snackbar import BaseSnackbar
 # Импорт своих модулей из пакета project
 from project.app import sign, log
 from project.app import get_tasks_info, get_team_name, get_team_users
-from project.app import push_task_info, change_task_state, remove_task
+from project.app import push_task_info, edit_task_info, change_task_state, remove_task
 from project.functions import generate_string, convert_month
 
 # Импорт других модулей
@@ -304,8 +304,8 @@ class LogInScreen(Screen):
 		print("<class> LogInScreen")
 
 		if test:
-			self.ids.login.text = "52KCB87OKQ"
-			self.ids.password.text = "FW1LE81IO2"
+			self.ids.login.text = "53Q7409Y8F"
+			self.ids.password.text = "F9LWAG6109"
 
 	def log_in(self):
 		print("\t<method> log_in")
@@ -319,7 +319,7 @@ class LogInScreen(Screen):
 		#// В kivy файле для теста
 		if log(data):
 			account_login = login
-			self.manager.transition.direction = 'down'
+			self.manager.transition.direction = 'up'
 			self.manager.transition.duration = 0.5
 			self.manager.current = 'main_screen'
 		else:
@@ -625,6 +625,17 @@ class TaskScreen(Screen):
 
 	def on_enter(self):
 		print("<class> TaskScreen")
+		global account_login
+
+		team_users = get_team_users(account_login)
+
+		user_logins = team_users['user_logins']
+		user_names = team_users['user_names']
+
+		for user_name in str(self.ids.members_label.text).split(", "):
+			index = user_names.index(user_name)
+			if user_logins[index] not in self._task_users_login:
+				self._task_users_login.append(user_logins[index])
 
 	def find_errors(self) -> bool:
 		"""Ищет ошибки. Удобнее было перенести логику в отдельный метод."""
@@ -635,8 +646,10 @@ class TaskScreen(Screen):
 	def make_task(self):
 		print("\t<method> make_task")
 		global task_box_id  # Глобальный id-шник заданий. Равен количеству заданий.
+		global main_screen_link
 		global account_login
 
+		print(f"\t\ttask_box_id: {task_box_id}")
 		if self.find_errors():
 			# self.ids.warning_label.text = "Введите все данные"
 			snackbar = CustomSnackbar(
@@ -649,35 +662,101 @@ class TaskScreen(Screen):
 			snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
 			snackbar.open()
 		else:
-			date = self.ids.date_label.text
-			time = self.ids.time_label.text
+			# Редактирование задачи
+			if (main_screen_link.get_tasks_length() > task_box_id):
 
-			task = {
-				"task_text": str(self.ids.text.text),
-				# Сюда запишутся все ключи-логины из поля '__task_users_login' класса <TaskMembersScreen>
-				"task_users_login": self._task_users_login,
-				"task_deadline": date + " " + time,  # "2021.06.07 00:00"
-				"task_is_done": False
-			}
-			# print(json.dumps(task, indent=4, ensure_ascii=False))
+				tasks, flag = get_tasks_info(account_login)
+				print(json.dumps(tasks[task_box_id], indent=4, ensure_ascii=False))
 
-			# В функцию пуша будем класть одну задачу и отправлять на сервер
-			if push_task_info(task):
-				self.ids.warning_label.text = ""
-				self._task_users_login.clear()  # Обязательно очищаем этот список
-				screen_manager.transition.direction = 'right'
-				screen_manager.transition.duration = 0.5
-				screen_manager.current = 'main_screen'
+				task = {
+					"task_id": tasks[task_box_id]['task_id'],
+					"task_text": None,
+					"task_deadline": None,
+					'task_users_login': None
+				}
+
+				# Если текст изменился, он будет отправлен
+				task_text = str(self.ids.text.text)  #*
+				if task_text != tasks[task_box_id]['task_text']:
+					task['task_text'] = task_text
+
+
+				# Если дедлайн был измененён
+				date = self.ids.date_label.text  #*
+				time = self.ids.time_label.text  #*
+
+				# print(f"\t\t'{date}'\n\t\t'{time}'")
+
+				date_and_time = str(tasks[task_box_id]["task_deadline"]).split(" ")
+				day, month, year = date_and_time[1:4]
+				hours, minutes = date_and_time[4].split(":")[:2]
+
+				new_date = f'{year}.{day}.{convert_month(month)}'
+				new_time = f'{hours}:{minutes}'
+
+				# print(f"\t\t'{new_date}'")
+				# print(f"\t\t'{new_time}'\n")
+
+				if (date != new_date) or (time != new_time):
+					task['task_deadline'] = new_date + " " + new_time
+
+				# Если список участников был изменён
+				print(f"\t\tlogins: {tasks[task_box_id]['task_user_logins']}")
+				print(f"\t\t_logins: {self._task_users_login}")
+				
+				if (self._task_users_login != tasks[task_box_id]['task_user_logins']):
+					task['task_users_login'] = self._task_users_login
+
+				
+				if edit_task_info(task):
+					self.ids.warning_label.text = ""
+					self._task_users_login.clear()  # Обязательно очищаем этот список
+					screen_manager.transition.direction = 'right'
+					screen_manager.transition.duration = 0.5
+					screen_manager.current = 'main_screen'
+				else:
+					snackbar = CustomSnackbar(
+						text="[color=#ffffff][b]Ошибка редактирования задачи[/b][/color]",
+						icon="information",
+						bg_color="#00BFA5",
+						snackbar_x="10dp",
+						snackbar_y="10dp",
+					)
+					snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+					snackbar.open()
+
+			# Создание новой
 			else:
-				snackbar = CustomSnackbar(
-					text="[color=#ffffff][b]Ошибка создания задачи[/b][/color]",
-					icon="information",
-					bg_color="#00BFA5",
-					snackbar_x="10dp",
-					snackbar_y="10dp",
-				)
-				snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
-				snackbar.open()
+				date = self.ids.date_label.text  #*
+				time = self.ids.time_label.text  #*
+
+				task_text = str(self.ids.text.text)  #*
+				task = {
+					"task_text": task_text,
+					# Сюда запишутся все ключи-логины из поля '__task_users_login' класса <TaskMembersScreen>
+					"task_users_login": self._task_users_login,
+					"task_deadline": date + " " + time,  # "2021.06.07 00:00"
+					"task_is_done": False
+				}
+				# print(json.dumps(task, indent=4, ensure_ascii=False))
+
+				# В функцию пуша будем класть одну задачу и отправлять на сервер
+				if push_task_info(task):
+					self.ids.warning_label.text = ""
+					self._task_users_login.clear()  # Обязательно очищаем этот список
+					screen_manager.transition.direction = 'right'
+					screen_manager.transition.duration = 0.5
+					screen_manager.current = 'main_screen'
+				else:
+					snackbar = CustomSnackbar(
+						text="[color=#ffffff][b]Ошибка создания задачи[/b][/color]",
+						icon="information",
+						bg_color="#00BFA5",
+						snackbar_x="10dp",
+						snackbar_y="10dp",
+					)
+					snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+					snackbar.open()
 
 	def show_time_picker(self):
 		""" Открытие диалогого окна времени """
@@ -836,11 +915,13 @@ class TaskMembersScreen(Screen):
 			global user_logins
 			global task_members_screen_link
 
-			task_member_index = task_members_screen_link.ids.container.children.index(instance)
+			task_member_index = len(user_logins) - 1 - task_members_screen_link.ids.container.children.index(instance)
+			print(f"\t\t\tt_m_index: {task_member_index}")
+			
 			print(f"\t\t\t{value}")
 			if value:
 				TaskMembersScreen().add_to_task_users_logins(
-					login=user_logins[task_member_index], 
+					login=user_logins[task_member_index],
 					name=instance.ids.content.text
 				)
 				print("\t\t\tOn")
@@ -852,6 +933,7 @@ class TaskMembersScreen(Screen):
 		print("<class> TaskMembersScreen")
 		global account_login
 		global user_logins
+		global user_names
 
 		global main_screen_link
 		global task_box_id
@@ -912,7 +994,25 @@ class TaskMembersScreen(Screen):
 	@classmethod
 	def accept_changes(cls):
 		"""Копирует изменения из временного словаря в постоянный"""
+		print("\t<classmethod> accept_changes")
+		global user_logins
+		global user_names
+		global task_members_screen_link
+
+		for task_member in task_members_screen_link.ids.container.children:
+			# Проходя по каждому участнику смотрит. Если участник прикреплён к задаче,
+			# то добавляет во временный словарь его логин и пароль.
+			index = user_names.index(task_member.text)  # Соответстующий индекс участника
+			if task_member.checkbox.active:  # Дебажил часа 2
+				task_member_login = user_logins[index]
+				cls.__temp_dictionary[task_member_login] = task_member.text
+			# Точно удалить из временного словаря
+			else:
+				if task_member.text in cls.__temp_dictionary.values():
+					cls.__temp_dictionary.pop(user_logins[index])
+		
 		cls.__task_users_login = cls.__temp_dictionary.copy()
+		print(f"\t\t_login: {cls.__task_users_login}")
 
 		snackbar = CustomSnackbar(
 			text="[color=#ffffff][b]Изменения сохранены[/b][/color]",
