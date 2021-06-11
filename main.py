@@ -304,8 +304,8 @@ class LogInScreen(Screen):
 		print("<class> LogInScreen")
 
 		if test:
-			self.ids.login.text = "53Q7409Y8F"
-			self.ids.password.text = "F9LWAG6109"
+			self.ids.login.text = "T4Z1P5J3SX"
+			self.ids.password.text = "EM9RFW22VS"
 
 	def log_in(self):
 		print("\t<method> log_in")
@@ -626,16 +626,22 @@ class TaskScreen(Screen):
 	def on_enter(self):
 		print("<class> TaskScreen")
 		global account_login
+		global task_box_id  #???
+		global main_screen_link
+		print(f"\ttask_box_id: {task_box_id}")
 
 		team_users = get_team_users(account_login)
 
 		user_logins = team_users['user_logins']
 		user_names = team_users['user_names']
 
-		for user_name in str(self.ids.members_label.text).split(", "):
-			index = user_names.index(user_name)
-			if user_logins[index] not in self._task_users_login:
-				self._task_users_login.append(user_logins[index])
+		print(f"\t_task_users: {self._task_users_login}")
+		# Если ещё нет задач и есть исполнители, список исполнителей пополняется новыми значениями
+		if len(main_screen_link.ids.container.children) and len(self._task_users_login): 
+			for user_name in str(self.ids.members_label.text).split(", "):
+				index = user_names.index(user_name)
+				if user_logins[index] not in self._task_users_login:
+					self._task_users_login.append(user_logins[index])
 
 	def find_errors(self) -> bool:
 		"""Ищет ошибки. Удобнее было перенести логику в отдельный метод."""
@@ -662,6 +668,12 @@ class TaskScreen(Screen):
 			snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
 			snackbar.open()
 		else:
+			# Данные с полей задачи
+			task_text = str(self.ids.text.text)
+			date = self.ids.date_label.text
+			time = self.ids.time_label.text
+			task_users_login = self._task_users_login
+
 			# Редактирование задачи
 			if (main_screen_link.get_tasks_length() > task_box_id):
 
@@ -676,36 +688,30 @@ class TaskScreen(Screen):
 				}
 
 				# Если текст изменился, он будет отправлен
-				task_text = str(self.ids.text.text)  #*
 				if task_text != tasks[task_box_id]['task_text']:
 					task['task_text'] = task_text
 
-
 				# Если дедлайн был измененён
-				date = self.ids.date_label.text  #*
-				time = self.ids.time_label.text  #*
-
-				# print(f"\t\t'{date}'\n\t\t'{time}'")
-
 				date_and_time = str(tasks[task_box_id]["task_deadline"]).split(" ")
 				day, month, year = date_and_time[1:4]
 				hours, minutes = date_and_time[4].split(":")[:2]
 
-				new_date = f'{year}.{day}.{convert_month(month)}'
-				new_time = f'{hours}:{minutes}'
+				pre_date = f'{year}.{day}.{convert_month(month)}'
+				pre_time = f'{hours}:{minutes}'
+				# print(f"\t\tdate: '{date}'")
+				# print(f"\t\ttime: '{time}'")
+				# print(f"\t\tpre_date: '{pre_date}'")
+				# print(f"\t\tpre_time: '{pre_time}'\n")
 
-				# print(f"\t\t'{new_date}'")
-				# print(f"\t\t'{new_time}'\n")
-
-				if (date != new_date) or (time != new_time):
-					task['task_deadline'] = new_date + " " + new_time
+				if (date != pre_date) or (time != pre_time):
+					task['task_deadline'] = date + " " + time
 
 				# Если список участников был изменён
 				print(f"\t\tlogins: {tasks[task_box_id]['task_user_logins']}")
-				print(f"\t\t_logins: {self._task_users_login}")
+				print(f"\t\t_logins: {task_users_login}")
 				
-				if (self._task_users_login != tasks[task_box_id]['task_user_logins']):
-					task['task_users_login'] = self._task_users_login
+				if (task_users_login != tasks[task_box_id]['task_user_logins']):
+					task['task_users_login'] = task_users_login
 
 				
 				if edit_task_info(task):
@@ -727,14 +733,10 @@ class TaskScreen(Screen):
 
 			# Создание новой
 			else:
-				date = self.ids.date_label.text  #*
-				time = self.ids.time_label.text  #*
-
-				task_text = str(self.ids.text.text)  #*
 				task = {
 					"task_text": task_text,
 					# Сюда запишутся все ключи-логины из поля '__task_users_login' класса <TaskMembersScreen>
-					"task_users_login": self._task_users_login,
+					"task_users_login": task_users_login,
 					"task_deadline": date + " " + time,  # "2021.06.07 00:00"
 					"task_is_done": False
 				}
