@@ -34,10 +34,6 @@
         pos_hint: {'center_x': 0.3, 'center_y': 0.5}
 
 
-<MDFillRoundFlatButton>:
-    theme_text_color: root.theme_text_color   
-    text_color: root.text_color   
-
 # Специальное текстовое поле
 <SpecialTextField@MDTextField>:
     multiline: False
@@ -47,6 +43,8 @@
     helper_text_mode: "on_error"
     helper_text: "Обязательное поле"
 
+
+# Карточка задачи
 <TaskCard>:
     size_hint_y: None
     height: content.height
@@ -82,17 +80,11 @@
             on_active: root.on_checkbox_active(*args, root)
 
 
+# Карточка участника команды
 <UserCard>:
     checkbox: checkbox
     size_hint_y: None
     height: content.height
-
-    MDCardSwipeLayerBox:
-        padding: "8dp"
-
-        MDIconButton:
-            icon: "face"
-            pos_hint: {"center_y": .5}
 
     MDCardSwipeFrontBox:
 
@@ -215,8 +207,6 @@
 
 # Экран регистрации
 <SignInScreen>:
-
-    # Toolbar, чтобы можно было использовать self.ids.toolbar.title
     toolbar: toolbar
 
     MDFloatLayout:
@@ -243,7 +233,7 @@
             anchor_title: 'center'
             pos_hint: {'top': 1.0}
 
-            left_action_items: [["arrow-left", lambda x: root.back_to_start(), "Вернуться на стартовую"]]
+            left_action_items: [["arrow-left", lambda x: root.back_to_start(), "Назад"]]
             right_action_items: [["pencil", lambda x: root.edit_team_name(), "Изменить название команды"]]
 
         MDIconButton:
@@ -286,6 +276,7 @@
 <LogInScreen>:
     login: login
     password: password
+
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
 
@@ -335,11 +326,6 @@
             
             on_release:
                 root.log_in()
-
-                # Код ниже для теста
-                # root.manager.transition.direction = 'up'
-                # root.manager.transition.duration = 0.5
-                # root.manager.current = 'main_screen'
 
 
 # Экран регистрации
@@ -415,8 +401,6 @@
 
 # Главный экран
 <MainScreen>:
-
-    # Toolbar, чтобы можно было использовать self.ids.toolbar.title
     toolbar: toolbar
     menu_list: menu_list
 
@@ -448,8 +432,8 @@
             # Оформление
             specific_text_color: 1, 1, 1, 1
 
-            left_action_items: [["arrow-left", lambda x: root.back_to_start()]]
-            right_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
+            left_action_items: [["arrow-left", lambda x: root.back_to_log(), "Назад"]]
+            right_action_items: [["menu", lambda x: nav_drawer.set_state("open"), "Меню"]]
 
         MDNavigationDrawer:
             id: nav_drawer
@@ -508,9 +492,7 @@
             user_font_size: "30sp"
 
             on_release:
-                root.manager.transition.direction = 'right'
-                root.manager.transition.duration = 0.5
-                root.manager.current = 'main_screen'
+                root.back_to_main()
 
         SpecialLabel:
             id: label
@@ -651,6 +633,7 @@
                 root.make_task()
 
 
+# Экран создания роли
 <RoleEditScreen>:
     role_name: role_name
     button: button
@@ -659,6 +642,7 @@
     join_tasks: join_tasks
     inviting: inviting
     warning_label: warning_label
+
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
 
@@ -770,22 +754,25 @@
             on_release:
                 root.create_role()
 
+
+# Карточка участника команды на информационном экране
 <UserInfoBox>:
     name: name
     role: role
     login: login
     password: password
+
     BoxLayout:
         color: 0,0,0,1
         canvas.before:
             Color:
-                rgba: (1,1,1,1)
+                rgba: (1, 1, 1, 1)
             RoundedRectangle:
                 radius: [10]
                 size: self.size
                 pos: self.pos
         spacing: 50
-        padding: [20,20,20,20]
+        padding: [20, 20, 20, 20]
         orientation: 'horizontal'
         BoxLayout:
             spacing: 20
@@ -835,8 +822,10 @@
             on_release: root.copy_to_clipboard(root)
 
 
+# Экран информации о только что созданной команде
 <InfoScreen>:
     info_list: info_list
+
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
         
@@ -865,6 +854,7 @@
                 root.manager.current = 'log_in_screen'
 
 
+# Экран участников задачи
 <TaskMembersScreen>:
     toolbar: toolbar
 

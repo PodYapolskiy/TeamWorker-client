@@ -607,11 +607,11 @@ class MainScreen(Screen):
 		return len(self.ids.container.children)
 
 	@staticmethod
-	def back_to_start():
-		print('<staticmethod> back_to_start\n')
-		screen_manager.transition.direction = 'up'
+	def back_to_log():
+		print('<staticmethod> back_to_log\n')
+		screen_manager.transition.direction = 'down'
 		screen_manager.transition.duration = 0.5
-		screen_manager.current = 'start_screen'
+		screen_manager.current = 'log_in_screen'
 		
 	@staticmethod
 	def clear_screen():
@@ -626,22 +626,31 @@ class TaskScreen(Screen):
 	def on_enter(self):
 		print("<class> TaskScreen")
 		global account_login
-		global task_box_id  #???
+		global task_box_id
 		global main_screen_link
-		print(f"\ttask_box_id: {task_box_id}")
 
-		team_users = get_team_users(account_login)
+		print("\ttask_box_id: ", task_box_id)
+		print(f"\tlen: {main_screen_link.get_tasks_length()}")
+		print(f"\t_task_users_login: {self._task_users_login}\n")
 
-		user_logins = team_users['user_logins']
-		user_names = team_users['user_names']
+		# Если новая задача без прикреплённых участников, её текст - "..."
+		if (task_box_id >= main_screen_link.get_tasks_length()) and (len(self._task_users_login) == 0):
+			self.ids.members_label.text = "..."
+		elif (task_box_id >= main_screen_link.get_tasks_length()):
+			print("\tИМЕННО ЭТО")
 
-		print(f"\t_task_users: {self._task_users_login}")
-		# Если ещё нет задач и есть исполнители, список исполнителей пополняется новыми значениями
-		if len(main_screen_link.ids.container.children) and len(self._task_users_login): 
-			for user_name in str(self.ids.members_label.text).split(", "):
-				index = user_names.index(user_name)
-				if user_logins[index] not in self._task_users_login:
-					self._task_users_login.append(user_logins[index])
+		else:
+			team_users = get_team_users(account_login)
+
+			user_logins = team_users['user_logins']
+			user_names = team_users['user_names']
+
+			# Если ещё нет задач и есть исполнители, список исполнителей пополняется новыми значениями
+			if len(main_screen_link.ids.container.children) and len(self._task_users_login):
+				for user_name in str(self.ids.members_label.text).split(", "):
+					index = user_names.index(user_name)
+					if user_logins[index] not in self._task_users_login:
+						self._task_users_login.append(user_logins[index])
 
 	def find_errors(self) -> bool:
 		"""Ищет ошибки. Удобнее было перенести логику в отдельный метод."""
@@ -787,6 +796,17 @@ class TaskScreen(Screen):
 
 		date_temp_list = str(value).split("-")
 		self.ids.date_label.text = f'{date_temp_list[0]}.{date_temp_list[2]}.{date_temp_list[1]}'
+
+	def back_to_main(self):
+		print('\t<method> back_to_main\n')
+
+		# Если участники были сохранены, а задача не была сохранена и пользователь уходит через стрелку назад
+		# нужно удалить всё что в это списке для корректного отображения task_members
+		self._task_users_login.clear()
+
+		screen_manager.transition.direction = 'right'
+		screen_manager.transition.duration = 0.5
+		screen_manager.current = 'main_screen'
 
 
 class RoleEditScreen(Screen):
@@ -937,12 +957,9 @@ class TaskMembersScreen(Screen):
 		global user_logins
 		global user_names
 
-		global main_screen_link
 		global task_box_id
-
-		print(f"\ttask_member_dict: {self.get_task_users_logins()}")
-		print("\ttask_box_id: ", task_box_id)
-		print(f"\tlen: {main_screen_link.get_tasks_length()}")
+		global main_screen_link
+		global task_screen_link
 
 		team_name = get_team_name(account_login)
 		if team_name != '':
@@ -960,11 +977,26 @@ class TaskMembersScreen(Screen):
 
 		tasks, flag = get_tasks_info(account_login)
 
+		print(f"\ttask_box_id: {task_box_id}")
+		print(f"\tlen: {main_screen_link.get_tasks_length()}")
+		print(f"\t_task_users_login: {task_screen_link._task_users_login}\n")
+
+		print(f"\t__task_users_login: {self.__task_users_login}")
+		print(f"\t__temp_dictionary: {self.__temp_dictionary}")
+
 		for i in range(len(user_names)):
 
 			flag = False
 			if (main_screen_link.get_tasks_length()) > task_box_id:
 				if user_names[i] in tasks[task_box_id]['task_user_names']:
+					flag = True
+
+			# В процессе создания задачи при повторном выборе участников задачи
+			else:
+				if user_logins[i] in task_screen_link._task_users_login:
+					print(f"\tuser_login (repeat) {user_logins[i]}")
+					task_members_screen_link.__temp_dictionary[user_logins[i]] = user_names[i]
+					task_members_screen_link.__task_users_login[user_logins[i]] = user_names[i]
 					flag = True
 
 			self.ids.container.add_widget(
@@ -974,6 +1006,11 @@ class TaskMembersScreen(Screen):
 					active=flag
 				)
 			)
+
+	@classmethod
+	def get_temp_dictionary(cls):
+		print("\t<classmethod> get_temp_dictionary")
+		return cls.__temp_dictionary
 
 	@classmethod
 	def get_task_users_logins(cls):
@@ -1005,7 +1042,7 @@ class TaskMembersScreen(Screen):
 			# Проходя по каждому участнику смотрит. Если участник прикреплён к задаче,
 			# то добавляет во временный словарь его логин и пароль.
 			index = user_names.index(task_member.text)  # Соответстующий индекс участника
-			if task_member.checkbox.active:  # Дебажил часа 2
+			if task_member.checkbox.active:
 				task_member_login = user_logins[index]
 				cls.__temp_dictionary[task_member_login] = task_member.text
 			# Точно удалить из временного словаря
@@ -1014,7 +1051,7 @@ class TaskMembersScreen(Screen):
 					cls.__temp_dictionary.pop(user_logins[index])
 		
 		cls.__task_users_login = cls.__temp_dictionary.copy()
-		print(f"\t\t_login: {cls.__task_users_login}")
+		print(f"\t\t__task_users_login: {cls.__task_users_login}")
 
 		snackbar = CustomSnackbar(
 			text="[color=#ffffff][b]Изменения сохранены[/b][/color]",
@@ -1035,10 +1072,24 @@ class TaskMembersScreen(Screen):
 
 	@classmethod
 	def back_to_task(cls):
-		print('\t<staticmethod> back_to_task\n')
+		print('\t<method> back_to_task\n')
 
+		global task_box_id
+		global main_screen_link
 		global task_screen_link
-		task_screen_link._task_users_login = list(cls.__task_users_login.keys())
+		global user_logins
+
+		print(f"\t\ttask_screen_link._task_users_login: {task_screen_link._task_users_login}")
+		print(f"\t\tcls.__task_users_login: {cls.__task_users_login}")
+		print(f"\t\tcls.__temp_dictionary: {cls.__temp_dictionary}")
+
+		#* Херня ниже работает с божьей помощью, я не понимаю
+		# Если задача новая
+		if (main_screen_link.get_tasks_length() <= task_box_id) and (len(task_screen_link._task_users_login) != 0):
+			print("\t\tЕсли новая задача, может что-то сделать")
+			task_screen_link._task_users_login = list(cls.__task_users_login.keys())
+		else:
+			task_screen_link._task_users_login = list(cls.__task_users_login.keys())
 
 		# Очищаем словари
 		cls.__task_users_login.clear()
@@ -1080,7 +1131,7 @@ class MyApp(MDApp):
 	y = 15
 
 	def refresh_callback(self, *args):
-		""" Обновляет состояние приложения, пока спиннер остаётся на экране """
+		"""Обновляет состояние приложения, пока спиннер остаётся на экране"""
 		print("<class> MDApp <method> refresh_callback")
 		
 		def refresh_callback(interval):
@@ -1097,7 +1148,7 @@ class MyApp(MDApp):
 		Clock.schedule_once(refresh_callback, 1)
 	
 	def exit_app(self):
-		""" Осуществляет выход из приложения """
+		"""Осуществляет выход из приложения"""
 		print("<class> MDApp <method> exit_app")
 		self.get_running_app().stop()
 

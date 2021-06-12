@@ -129,7 +129,7 @@ def get_tasks_info(account_login: str) -> Tuple[list, bool]:
 			}
 		]
 	"""
-	print('\n<func> get_tasks_info')
+	# print('\n<func> get_tasks_info')
 
 	try:
 		r = requests.post(
@@ -138,7 +138,7 @@ def get_tasks_info(account_login: str) -> Tuple[list, bool]:
 			headers=headers
 		)
 
-		print(f'\t"POST {server_domain}/get_tasks_info" {r.status_code}')
+		# print(f'\t"POST {server_domain}/get_tasks_info" {r.status_code}')
 		tasks: list = json.loads(r.text)
 		# print("tasks:\n", json.dumps(tasks, indent=4, ensure_ascii=False), "\n")
 
@@ -157,7 +157,7 @@ def get_team_users(account_login: str) -> dict:
 			'user_roles':  List[str]
 		}
 	"""
-	print('\n<func> get_team_users')
+	# print('\n<func> get_team_users')
 
 	try:
 		r = requests.post(
@@ -166,9 +166,9 @@ def get_team_users(account_login: str) -> dict:
 			headers=headers
 		)
 
-		print(f'\t"POST {server_domain}/get_team_users" {r.status_code}')
+		# print(f'\t"POST {server_domain}/get_team_users" {r.status_code}')
 		data: dict = json.loads(r.text)
-		print("data: ", json.dumps(data, indent=4, ensure_ascii=False), "\n")
+		# print("data: ", json.dumps(data, indent=4, ensure_ascii=False), "\n")
 
 		return data
 
@@ -178,7 +178,7 @@ def get_team_users(account_login: str) -> dict:
 
 
 def get_team_name(account_login: str) -> str:
-	print('\n<func> get_team_name')
+	# print('\n<func> get_team_name')
 
 	try:
 		r = requests.post(
@@ -187,7 +187,7 @@ def get_team_name(account_login: str) -> str:
 			headers=headers
 		)
 
-		print(f'\t"POST {server_domain}/get_team_name" {r.status_code}', "\n")
+		# print(f'\t"POST {server_domain}/get_team_name" {r.status_code}', "\n")
 		return json.loads(r.text)['team_name']
 
 	except Exception as e:
@@ -204,7 +204,7 @@ def push_task_info(task: dict) -> bool:
 			"task_is_done":     bool
 		}
 	"""
-	print('\n<func> push_task_info')
+	# print('\n<func> push_task_info')
 
 	try:
 		r = requests.post(
@@ -213,8 +213,8 @@ def push_task_info(task: dict) -> bool:
 			headers=headers
 		)
 
-		print(f'\t"POST {server_domain}/push_task_info" {r.status_code}')
-		print(f"\t{r.text}")
+		# print(f'\t"POST {server_domain}/push_task_info" {r.status_code}')
+		# print(f"\t{r.text}")
 
 		if 400 > r.status_code > 199:
 			print(f'\tTrue\n')
@@ -237,8 +237,8 @@ def edit_task_info(task: dict) -> bool:
 			"task_deadline":    str | None
 		}
 	"""
-	print('\n<func> edit_task_info')
-	print(json.dumps(task, indent=4, ensure_ascii=False))
+	# print('\n<func> edit_task_info')
+	# print(json.dumps(task, indent=4, ensure_ascii=False))
 
 	# Если изменений не было
 	if list(task.values()).count(None) == 3:
@@ -251,8 +251,8 @@ def edit_task_info(task: dict) -> bool:
 			headers=headers
 		)
 
-		print(f'\t"POST {server_domain}/edit_task_info" {r.status_code}')
-		print(f"\t{r.text}")
+		# print(f'\t"POST {server_domain}/edit_task_info" {r.status_code}')
+		# print(f"\t{r.text}")
 
 		if 400 > r.status_code > 199:
 			print(f'\tTrue\n')
@@ -270,7 +270,7 @@ def change_task_state(id: int) -> bool:
 	"""Функция должна изменять состояние задачи по её `id`. Это оптимизирует работу приложения.
 		Возвращает булевое значение того, насколько удачно прошло изменение.
 	"""
-	print('\n<func> change_task_state')
+	# print('\n<func> change_task_state')
 	
 	try:
 		r = requests.post(
@@ -279,8 +279,8 @@ def change_task_state(id: int) -> bool:
 			headers=headers
 		)
 
-		print(f'\t"POST {server_domain}/change_task_state" {r.status_code}')
-		print(f"\t{r.text}")
+		# print(f'\t"POST {server_domain}/change_task_state" {r.status_code}')
+		# print(f"\t{r.text}")
 
 		if 400 > r.status_code > 199:
 			print(f'\tTrue\n')
@@ -306,7 +306,7 @@ def remove_task(id: int) -> bool:
 		)
 
 		print(f'\t"POST {server_domain}/remove_task" {r.status_code}')
-		print(f"\t{r.text}")
+		# print(f"\t{r.text}")
 
 		if 400 > r.status_code > 199:
 			print(f'\tTrue\n')
