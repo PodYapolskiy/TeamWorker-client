@@ -182,7 +182,7 @@ class SignInScreen(Screen):
 			user_dict = {}  # Временный словарь для каждой итерации
 
 			# Генерируем значения логина и пароля пользователя
-			user_login = generate_string(unique=False)  # (unique=True) #!!!
+			user_login = generate_string(unique=True)
 			user_dict['user_login'] = user_login
 			user_dict['user_password'] = generate_string(unique=False)
 
@@ -203,6 +203,7 @@ class SignInScreen(Screen):
 			if role['role_name'] not in exist_roles:
 				roles.remove(role)
 
+		exist_roles.clear()  # Очищает существующие роли
 		data['roles'] = roles
 
 		print(json.dumps(data, indent=4, ensure_ascii=False))
@@ -902,6 +903,7 @@ class InfoScreen(Screen):
 	
 	def on_enter(self):
 		print("<class> InfoScreen")
+		print("\t<method> on_enter")
 		global data
 
 		for item in self.ids.info_list.children:
@@ -917,6 +919,61 @@ class InfoScreen(Screen):
 					password=user['user_password']
 				)
 			)
+	
+	def on_leave(self):
+		"""Очищение всех полей, использующихся в регистрации команды"""
+		print("\t<method> on_leave")
+
+		#* SignInScreen
+		global sign_in_screen_link
+		sign_in_screen_link.ids.toolbar.title = "<Введите название команды>"
+
+		# Удаляем всех раннее созданных польхователей для регистрации
+		for user_card in sign_in_screen_link.ids.container.children.copy():
+			sign_in_screen_link.ids.container.remove_widget(user_card)
+
+		# Добавить карточку шаблон для создания нового пользователя при входе на экран регистрации
+		sign_in_screen_link.create_user_box()
+		sign_in_screen_link.ids.container.children[user_box_id].text = "<Введите Ваше имя>"
+		sign_in_screen_link.ids.container.children[user_box_id].secondary_text = "Капитан"
+
+		global data
+		data.clear()
+
+		# Меняет текст в диалоге на ""
+		for obj in sign_in_screen_link.dialog.content_cls.children:
+			if isinstance(obj, MDTextField):
+				obj.text = ""
+
+		#* RegistrationScreen
+		global menu_items
+		for role in menu_items.copy():
+			if (role["text"] != "Капитан") and (role["text"] != "Создать роль"):
+				print(f"remove: {role['text']}")
+				menu_items.remove(role)
+		
+		# Меняем выбор ролей на дефолтный
+		registration_screen_link.menu = MDDropdownMenu(
+			caller=registration_screen_link.ids.role,
+			items=menu_items,
+			position="bottom",
+			width_mult=4,
+		)
+
+		global roles
+		roles.clear()
+
+		#* RoleEditScreen
+		global role_edit_screen_link
+		role_edit_screen_link.ids.role_name.text = ""
+		role_edit_screen_link.ids.create_tasks.active = False
+		role_edit_screen_link.ids.join_tasks.active = False
+		role_edit_screen_link.ids.inviting.active = False
+
+		#* InfoScreen
+		# Удаляем все созданные карточки с информацией
+		for user_info in self.ids.info_list.children.copy():
+			self.ids.info_list.remove_widget(user_info)
 
 
 class TaskMembersScreen(Screen):

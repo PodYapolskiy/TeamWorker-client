@@ -208,6 +208,7 @@
 # Экран регистрации
 <SignInScreen>:
     toolbar: toolbar
+    container: container
 
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
@@ -335,6 +336,7 @@
     button: button
     label: label
     warning_label: warning_label
+
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
 
@@ -638,7 +640,7 @@
     role_name: role_name
     button: button
     label: label
-    cteate_tasks: cteate_tasks
+    create_tasks: create_tasks
     join_tasks: join_tasks
     inviting: inviting
     warning_label: warning_label
@@ -693,7 +695,7 @@
             pos_hint: {'center_x': 0.65, 'center_y': 0.5}  # 'center_y': 0.55
             
         MDSwitch:
-            id: cteate_tasks
+            id: create_tasks
             pos_hint: {'center_x': 0.8, 'center_y': 0.5}
             on_active: root.on_checkbox1_active(*args)
 
@@ -763,7 +765,7 @@
     password: password
 
     BoxLayout:
-        color: 0,0,0,1
+        color: 0, 0, 0, 1
         canvas.before:
             Color:
                 rgba: (1, 1, 1, 1)
@@ -782,34 +784,34 @@
                 text_size: self.size
                 halign: 'left'
                 valign: 'middle'
-                color: 0,0,0,1
+                color: 0, 0, 0, 1
                 font_size: 16
             Label:
                 id: role
                 text_size: self.size
                 halign: 'left'
                 valign: 'middle'
-                color: 0,0,0,1
+                color: 0, 0, 0, 1
                 font_size: 16
             Label:
                 id: login
                 text_size: self.size
                 halign: 'left'
                 valign: 'middle'
-                color: 0,0,0,1
+                color: 0, 0, 0, 1
                 font_size: 16
             Label:
                 id: password
                 text_size: self.size
                 halign: 'left'
                 valign: 'middle'
-                color: 0,0,0,1
+                color: 0, 0, 0, 1
                 font_size: 16
 
         MDIconButton:
             # Текст
             user_font_size: "35sp"
-            text_color: 1,1,1,1
+            text_color: 1, 1, 1, 1
             
             # Позиционирование
             pos_hint: {'center_y': .5}
