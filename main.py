@@ -32,6 +32,7 @@ from project.functions import generate_string, convert_month
 # Импорт других модулей
 import json
 from datetime import datetime
+from typing import Optional
 
 #// (test)
 from kivy.core.window import Window  # - для понимания с компьютера, убирать перед компиляцией
@@ -45,7 +46,7 @@ val1, val2, val3 = False, False, False
 
 
 class Singleton(type):
-	""""""
+	"""Шаблон проектирования Одиночка. Реализация, не учитывающая метод __init__."""
 	_instances = {}
 
 	def __call__(cls, *args, **kwargs):
@@ -57,15 +58,24 @@ class Singleton(type):
 class Logger(metaclass=Singleton):
 	"""Действующий авторизованный профиль. Реализует паттерн проектирования Singleton."""
 	__login = None  # Логин авторизованного пользователя
-	# team_name = None  # Название команды #! Чтобы не обращаться каждый раз к серверу.
 
 	@property
-	def login(self):
+	def login(self) -> Optional[str]:
 		return self.__login
 
 	@login.setter
 	def login(self, value):
 		self.__login = value
+
+	__team_name = None  # Название команды
+
+	@property
+	def team_name(self) -> str:
+		return self.__team_name
+
+	@team_name.setter
+	def team_name(self, value):
+		self.__team_name = value
 
 
 account = Logger()  # Авторизованный аккаунт на клиенте. По умолчанию None
@@ -311,6 +321,12 @@ class LogInScreen(Screen):
 
 		if log(data):
 			account.login = login  # Логин вошедшего пользователя
+
+			if get_team_name(login) != '':
+				account.team_name = get_team_name(login)
+			else:
+				account.team_name = "<ОШИБКА>"
+
 			self.manager.transition.direction = 'up'
 			self.manager.transition.duration = 0.5
 			self.manager.current = 'main_screen'
@@ -527,12 +543,8 @@ class MainScreen(Screen):
 		"""
 		print("<class> MainScreen")
 		
-		team_name = get_team_name(account.login)
-		if team_name != '':
-			self.ids.toolbar.title = team_name
-		else: 
-			# Если произошла ошибка в получении названия
-			self.ids.toolbar.title = "<ОШИБКА>"
+		team_name = account.team_name
+		self.ids.toolbar.title = team_name
 
 		self.ids.container.clear_widgets()
 		self.display_tasks()
@@ -988,11 +1000,8 @@ class TaskMembersScreen(Screen):
 		global main_screen_link
 		global task_screen_link
 
-		team_name = get_team_name(account.login)
-		if team_name != '':
-			self.ids.toolbar.title = team_name
-		else:
-			self.ids.toolbar.title = "<ОШИБКА>"
+		team_name = account.team_name
+		self.ids.toolbar.title = team_name
 
 		self.ids.container.clear_widgets()
 
