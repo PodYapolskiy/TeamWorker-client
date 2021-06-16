@@ -44,44 +44,40 @@ roles = []  # Глобальный список ролей
 val1, val2, val3 = False, False, False
 
 
+class Singleton(type):
+	""""""
+	_instances = {}
+
+	def __call__(cls, *args, **kwargs):
+		if cls not in cls._instances:
+			cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+		return cls._instances[cls]
+
+
+class Logger(metaclass=Singleton):
+	"""Действующий авторизованный профиль. Реализует паттерн проектирования Singleton."""
+	__login = None  # Логин авторизованного пользователя
+	# team_name = None  # Название команды #! Чтобы не обращаться каждый раз к серверу.
+
+	@property
+	def login(self):
+		return self.__login
+
+	@login.setter
+	def login(self, value):
+		self.__login = value
+
+
+account = Logger()  # Авторизованный аккаунт на клиенте. По умолчанию None
+
+
 class CustomSnackbar(BaseSnackbar):
 	"""Кастомный Снэкбар. Плашка, возникающая при ошибках"""
 	text = StringProperty(None)
 	icon = StringProperty(None)
 	font_size = NumericProperty("20sp")
 
-
-'''  Дальнейшая попытка сделать класс залогированного пользователя
-class Singleton(type):
-	"""Метакласс. Паттерн проектирования 'одиночка'."""
-	# def __init__(cls, *args, **kwargs):
-	# 	super().__init__(*args, **kwargs)
-	_instance = None
-	
-	def __call__(cls, *args, **kwargs):
-		if cls._instance is None:
-			cls._instance = super().__call__(*args, **kwargs)
-		return cls._instance
-
-
-class Logger(metaclass=Singleton):
-	"""Действующий авторизованный профиль."""
-	login = None  # Логин авторизованного пользователя
-	team_name = None  # Название команды #! Чтобы не обращаться каждый раз к серверу.
-
-	def set_login(self):
-		pass
-
-	def set_team(self):
-		pass
-
-
-account = Logger()  # Авторизованный аккаунт на клиенте. По умолчанию None
-'''
-
-# Переменная, указывающая на login пользователя, данной, конкретной сессии
-account_login = None
-
+# -------------------------------------   Screens   -------------------------------------
 
 class StartScreen(Screen):
 	"""Начальный экран"""
@@ -163,10 +159,6 @@ class SignInScreen(Screen):
 		print("\t<method> sign_in")
 		global data
 		global roles
-		global account_login
-
-		for role in roles:
-			print(f"\t{role}")
 
 		# Данные, которые будут отправлены на сервер
 		data = {
@@ -196,7 +188,7 @@ class SignInScreen(Screen):
 
 			# Основным аккаунтом данной сессии является аккаунт с этим логином
 			if user_role == "Капитан":
-				account_login = user_login
+				account.login = user_login
 
 		# удаляет из ролей те, которые не были использованы на момент нажатия кнопки регистрации
 		for role in roles.copy():
@@ -222,11 +214,6 @@ class SignInScreen(Screen):
 			)
 			snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
 			snackbar.open()
-
-			if test:
-				self.manager.transition.direction = 'down'
-				self.manager.transition.duration = 0.5
-				self.manager.current = 'info_screen'
 
 	def edit_team_name(self):
 		""" Создаёт диалоговое окно """
@@ -304,22 +291,26 @@ class LogInScreen(Screen):
 	def on_enter(self):
 		print("<class> LogInScreen")
 
+		# Логин последнего зарегистрированного капитана или вошедшего пользователя
+		if account.login:
+			self.ids.login.text = account.login
+			self.ids.password.text = ''
+
+		#// (test)
 		if test:
 			self.ids.login.text = "T4Z1P5J3SX"
 			self.ids.password.text = "EM9RFW22VS"
 
 	def log_in(self):
 		print("\t<method> log_in")
-		global account_login
 
 		login = self.login.text
 		password = self.password.text
 
 		data = {'login': login, 'password': password}
 
-		#// В kivy файле для теста
 		if log(data):
-			account_login = login
+			account.login = login  # Логин вошедшего пользователя
 			self.manager.transition.direction = 'up'
 			self.manager.transition.duration = 0.5
 			self.manager.current = 'main_screen'
@@ -333,11 +324,6 @@ class LogInScreen(Screen):
 			)
 			snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
 			snackbar.open()
-
-			if test:
-				self.manager.transition.direction = 'down'
-				self.manager.transition.duration = 0.5
-				self.manager.current = 'main_screen'
 
 
 class RegistrationScreen(Screen):
@@ -426,7 +412,7 @@ class MainScreen(Screen):
 			global task_box_id
 			global task_screen_link
 
-			tasks, flag = get_tasks_info(account_login)
+			tasks, flag = get_tasks_info(account.login)
 
 			self.set_task_box_id(instance)
 			task = tasks[task_box_id]  # Конкретно эта задача
@@ -460,11 +446,10 @@ class MainScreen(Screen):
 			print('\t\t<method> remove_card')
 
 			global main_screen_link
-			global account_login
 			global task_box_id
 
 			self.set_task_box_id(instance)
-			tasks, flag = get_tasks_info(account_login)
+			tasks, flag = get_tasks_info(account.login)
 
 			'''Сделать через нахождения того же текста задачи
 				# for task in main_screen_link.ids.container.children:
@@ -500,9 +485,8 @@ class MainScreen(Screen):
 			print(f"\t\t\tvalue: {value}")
 
 			global task_box_id
-			global account_login
 
-			tasks, flag = get_tasks_info(account_login)  #???
+			tasks, flag = get_tasks_info(account.login)
 			# flag будем настраивать, когда приложение будет готово
 			# Он нужен, чтобы корректно показывать пользователю, что именно не работает
 
@@ -542,13 +526,8 @@ class MainScreen(Screen):
 			]
 		"""
 		print("<class> MainScreen")
-		global account_login
-
-		# Тот пользователь, который входит (глобальная переменная)
-		# Если вход происходит сразу с SignInScreen, то пользователь - капитан
-		# Если с LogInScreen, то тот, который вошёл
 		
-		team_name = get_team_name(account_login)
+		team_name = get_team_name(account.login)
 		if team_name != '':
 			self.ids.toolbar.title = team_name
 		else: 
@@ -561,10 +540,9 @@ class MainScreen(Screen):
 	def display_tasks(self):
 		"""Обновляет список задач"""
 		print ("\t<method> display_tasks")
-		global account_login
 
 		# flag - Переменная определяющая произошло ли получение задач удачно
-		tasks, flag = get_tasks_info(account_login)
+		tasks, flag = get_tasks_info(account.login)
 
 		# Если получение прошло без ошибок
 		if flag:
@@ -626,13 +604,8 @@ class TaskScreen(Screen):
 
 	def on_enter(self):
 		print("<class> TaskScreen")
-		global account_login
 		global task_box_id
 		global main_screen_link
-
-		print("\ttask_box_id: ", task_box_id)
-		print(f"\tlen: {main_screen_link.get_tasks_length()}")
-		print(f"\t_task_users_login: {self._task_users_login}\n")
 
 		# Если новая задача без прикреплённых участников, её текст - "..."
 		if (task_box_id >= main_screen_link.get_tasks_length()) and (len(self._task_users_login) == 0):
@@ -641,7 +614,7 @@ class TaskScreen(Screen):
 			print("\tИМЕННО ЭТО")
 
 		else:
-			team_users = get_team_users(account_login)
+			team_users = get_team_users(account.login)
 
 			user_logins = team_users['user_logins']
 			user_names = team_users['user_names']
@@ -663,7 +636,6 @@ class TaskScreen(Screen):
 		print("\t<method> make_task")
 		global task_box_id  # Глобальный id-шник заданий. Равен количеству заданий.
 		global main_screen_link
-		global account_login
 
 		print(f"\t\ttask_box_id: {task_box_id}")
 		if self.find_errors():
@@ -687,7 +659,7 @@ class TaskScreen(Screen):
 			# Редактирование задачи
 			if (main_screen_link.get_tasks_length() > task_box_id):
 
-				tasks, flag = get_tasks_info(account_login)
+				tasks, flag = get_tasks_info(account.login)
 				print(json.dumps(tasks[task_box_id], indent=4, ensure_ascii=False))
 
 				task = {
@@ -750,7 +722,6 @@ class TaskScreen(Screen):
 					"task_deadline": date + " " + time,  # "2021.06.07 00:00"
 					"task_is_done": False
 				}
-				# print(json.dumps(task, indent=4, ensure_ascii=False))
 
 				# В функцию пуша будем класть одну задачу и отправлять на сервер
 				if push_task_info(task):
@@ -1010,7 +981,6 @@ class TaskMembersScreen(Screen):
 
 	def on_enter(self):
 		print("<class> TaskMembersScreen")
-		global account_login
 		global user_logins
 		global user_names
 
@@ -1018,7 +988,7 @@ class TaskMembersScreen(Screen):
 		global main_screen_link
 		global task_screen_link
 
-		team_name = get_team_name(account_login)
+		team_name = get_team_name(account.login)
 		if team_name != '':
 			self.ids.toolbar.title = team_name
 		else:
@@ -1026,20 +996,13 @@ class TaskMembersScreen(Screen):
 
 		self.ids.container.clear_widgets()
 
-		team_users = get_team_users(account_login)
+		team_users = get_team_users(account.login)
 
 		user_logins = team_users['user_logins']
 		user_names = team_users['user_names']
 		user_roles = team_users['user_roles']
 
-		tasks, flag = get_tasks_info(account_login)
-
-		print(f"\ttask_box_id: {task_box_id}")
-		print(f"\tlen: {main_screen_link.get_tasks_length()}")
-		print(f"\t_task_users_login: {task_screen_link._task_users_login}\n")
-
-		print(f"\t__task_users_login: {self.__task_users_login}")
-		print(f"\t__temp_dictionary: {self.__temp_dictionary}")
+		tasks, flag = get_tasks_info(account.login)
 
 		for i in range(len(user_names)):
 
@@ -1051,7 +1014,6 @@ class TaskMembersScreen(Screen):
 			# В процессе создания задачи при повторном выборе участников задачи
 			else:
 				if user_logins[i] in task_screen_link._task_users_login:
-					print(f"\tuser_login (repeat) {user_logins[i]}")
 					task_members_screen_link.__temp_dictionary[user_logins[i]] = user_names[i]
 					task_members_screen_link.__task_users_login[user_logins[i]] = user_names[i]
 					flag = True

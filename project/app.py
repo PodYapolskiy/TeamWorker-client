@@ -116,7 +116,7 @@ def log(data: dict) -> bool:
 		return False
 
 
-def get_tasks_info(account_login: str) -> Tuple[list, bool]:
+def get_tasks_info(login: str) -> Tuple[list, bool]:
 	"""Возвращает список задач в таком формате:\n
 		[
 			{
@@ -134,7 +134,7 @@ def get_tasks_info(account_login: str) -> Tuple[list, bool]:
 	try:
 		r = requests.post(
 			url=f'{server_domain}/get_tasks_info',
-			data=json.dumps({'account_login': account_login}),
+			data=json.dumps({'login': login}),
 			headers=headers
 		)
 
@@ -149,7 +149,7 @@ def get_tasks_info(account_login: str) -> Tuple[list, bool]:
 		return [], False
 
 
-def get_team_users(account_login: str) -> dict:
+def get_team_users(login: str) -> dict:
 	"""Словарь из 2 списков: 1)логины 2)имена\n
 		{
 			'user_logins': List[str]
@@ -162,7 +162,7 @@ def get_team_users(account_login: str) -> dict:
 	try:
 		r = requests.post(
 			url=f'{server_domain}/get_team_users',
-			data=json.dumps({'account_login': account_login}),
+			data=json.dumps({'login': login}),
 			headers=headers
 		)
 
@@ -177,13 +177,13 @@ def get_team_users(account_login: str) -> dict:
 		return {}
 
 
-def get_team_name(account_login: str) -> str:
+def get_team_name(login: str) -> str:
 	# print('\n<func> get_team_name')
 
 	try:
 		r = requests.post(
 			url=f'{server_domain}/get_team_name',
-			data=json.dumps({'account_login': account_login}),
+			data=json.dumps({'login': login}),
 			headers=headers
 		)
 
