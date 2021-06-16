@@ -437,11 +437,11 @@ class MainScreen(Screen):
 			task_screen_link.ids.members_label.text = ", ".join(task['task_user_names'])
 
 			date_and_time = str(task["task_deadline"]).split(" ")
-			day, month, year = date_and_time[1:4]
 			hours, minutes = date_and_time[4].split(":")[:2]  # Из "15:30:00" в "15", "30"
+			day, month, year = date_and_time[1:4]
 
 			task_screen_link.ids.time_label.text = f'{hours}:{minutes}'
-			task_screen_link.ids.date_label.text = f'{year}.{day}.{convert_month(month)}'
+			task_screen_link.ids.date_label.text = f'{day}.{convert_month(month)}.{year}'
 
 			# Переход на экран редактирования и создания задач
 			screen_manager.current = "task_screen"
@@ -608,7 +608,7 @@ class MainScreen(Screen):
 	def clear_screen():
 		task_screen_link.ids.text.text = ""
 		task_screen_link.ids.time_label.text = "HH.MM"
-		task_screen_link.ids.date_label.text = "YYYY.DD.MM"
+		task_screen_link.ids.date_label.text = "DD.MM.YYYY"
 
 
 class TaskScreen(Screen):
@@ -690,20 +690,13 @@ class TaskScreen(Screen):
 				day, month, year = date_and_time[1:4]
 				hours, minutes = date_and_time[4].split(":")[:2]
 
-				pre_date = f'{year}.{day}.{convert_month(month)}'
+				pre_date = f'{day}.{convert_month(month)}.{year}'
 				pre_time = f'{hours}:{minutes}'
-				# print(f"\t\tdate: '{date}'")
-				# print(f"\t\ttime: '{time}'")
-				# print(f"\t\tpre_date: '{pre_date}'")
-				# print(f"\t\tpre_time: '{pre_time}'\n")
 
 				if (date != pre_date) or (time != pre_time):
 					task['task_deadline'] = date + " " + time
 
 				# Если список участников был изменён
-				print(f"\t\tlogins: {tasks[task_box_id]['task_user_logins']}")
-				print(f"\t\t_logins: {task_users_login}")
-				
 				if (task_users_login != tasks[task_box_id]['task_user_logins']):
 					task['task_users_login'] = task_users_login
 
@@ -731,7 +724,7 @@ class TaskScreen(Screen):
 					"task_text": task_text,
 					# Сюда запишутся все ключи-логины из поля '__task_users_login' класса <TaskMembersScreen>
 					"task_users_login": task_users_login,
-					"task_deadline": date + " " + time,  # "2021.06.07 00:00"
+					"task_deadline": date + " " + time,  # "2021.06.07 00:00" #! "06.07.2021 00:00"
 					"task_is_done": False
 				}
 
@@ -779,7 +772,7 @@ class TaskScreen(Screen):
 		print(f"\t<method> on_save_date: {value} {date_range}")
 
 		date_temp_list = str(value).split("-")
-		self.ids.date_label.text = f'{date_temp_list[0]}.{date_temp_list[2]}.{date_temp_list[1]}'
+		self.ids.date_label.text = f'{date_temp_list[2]}.{date_temp_list[1]}.{date_temp_list[0]}'
 
 	def back_to_main(self):
 		print('\t<method> back_to_main\n')
@@ -1106,10 +1099,6 @@ class TaskMembersScreen(Screen):
 		global main_screen_link
 		global task_screen_link
 		global user_logins
-
-		print(f"\t\ttask_screen_link._task_users_login: {task_screen_link._task_users_login}")
-		print(f"\t\tcls.__task_users_login: {cls.__task_users_login}")
-		print(f"\t\tcls.__temp_dictionary: {cls.__temp_dictionary}")
 
 		#* Херня ниже работает с божьей помощью, я не понимаю
 		# Если задача новая
