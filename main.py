@@ -9,11 +9,12 @@ from kivy.properties import ObjectProperty, StringProperty, NumericProperty, Boo
 from kivy.uix.boxlayout import BoxLayout
 from kivy.config import Config
 from kivy.core.clipboard import Clipboard
+from kivy.utils import get_color_from_hex
 
 # Импорт из kivymd
 from kivymd.app import MDApp
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton, MDRaisedButton
+from kivymd.uix.button import MDFlatButton, MDIconButton, MDRaisedButton
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.list import IRightBodyTouch
 from kivymd.uix.card import MDCardSwipe
@@ -25,14 +26,15 @@ from kivymd.uix.snackbar import BaseSnackbar
 
 # Импорт своих модулей из пакета project
 from project.app import sign, log
-from project.app import get_tasks_info, get_team_name, get_team_users
+from project.app import get_tasks_info, get_team_name, get_team_users, get_user_role_permissions
 from project.app import push_task_info, edit_task_info, change_task_state, remove_task
 from project.functions import generate_string, convert_month
 
 # Импорт других модулей
 import json
+import weakref
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict
 
 #// (test)
 from kivy.core.window import Window  # - для понимания с компьютера, убирать перед компиляцией
@@ -76,6 +78,22 @@ class Logger(metaclass=Singleton):
 	@team_name.setter
 	def team_name(self, value):
 		self.__team_name = value
+	
+	__role_permissions = {  # Словарь разрешений роли
+		'create_tasks': True,
+		'join_tasks': True,
+		'inviting': True
+	}
+
+	@property
+	def rp(self) -> Dict[str, bool]:
+		return self.__role_permissions
+	
+	@rp.setter
+	def rp(self, d: Dict[str, bool]):
+		"""Устанавливает разрешения роли в соответствии со словарём пришедшим с сервера."""
+		for k, v in d.items():
+			self.__role_permissions[k] = v
 
 
 account = Logger()  # Авторизованный аккаунт на клиенте. По умолчанию None
@@ -237,13 +255,11 @@ class SignInScreen(Screen):
 				radius=[20, 20, 20, 20],
 				buttons=[
 					MDFlatButton(
-						text="ОТМЕНА", 
-						text_color=MyApp().theme_cls.primary_color,
+						text="ОТМЕНА",
 						on_release=self.dialog_cancel
 					),
 					MDRaisedButton(
-						text="ПРИНЯТЬ", 
-						#text_color=MyApp().theme_cls.primary_color,
+						text="[color=#ffffff]ПРИНЯТЬ[/color]",
 						on_release=self.dialog_accept
 					),
 				],
@@ -308,8 +324,8 @@ class LogInScreen(Screen):
 
 		#// (test)
 		if test:
-			self.ids.login.text = "T4Z1P5J3SX"
-			self.ids.password.text = "EM9RFW22VS"
+			self.ids.login.text = "R14987VXC3"
+			self.ids.password.text = "X8VPVR8ZVK"
 
 	def log_in(self):
 		print("\t<method> log_in")
@@ -321,6 +337,10 @@ class LogInScreen(Screen):
 
 		if log(data):
 			account.login = login  # Логин вошедшего пользователя
+
+			rp_dict = get_user_role_permissions(login)
+			if rp_dict.keys():  # Если словарь не пустой
+				account.rp = rp_dict
 
 			if get_team_name(login) != '':
 				account.team_name = get_team_name(login)
@@ -340,6 +360,15 @@ class LogInScreen(Screen):
 			)
 			snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
 			snackbar.open()
+
+	#!!! test
+	def change_to_capitan(self):
+		self.ids.login.text = "T4Z1P5J3SX"
+		self.ids.password.text = "EM9RFW22VS"
+
+	def change_to_participant(self):
+		self.ids.login.text = "R14987VXC3"
+		self.ids.password.text = "X8VPVR8ZVK"
 
 
 class RegistrationScreen(Screen):
@@ -542,7 +571,39 @@ class MainScreen(Screen):
 			]
 		"""
 		print("<class> MainScreen")
+
+		# Если пользователь не может создавать задачи и кнопка создания существует
+		if (not account.rp['create_tasks']) and ('create_btn' in self.ids.keys()):
+			self.ids.create_btn.parent.remove_widget(self.ids.create_btn)
+			self.ids.pop('create_btn')
 		
+		# Если может и кнопка была удалена предыдущим пользователем
+		elif (account.rp['create_tasks']) and ('create_btn' not in self.ids.keys()):
+
+			def _on_release_create_btn(self):
+				"""Функция, нужная для упаковки всех действий, которые произойдут при нажатии на MDIconButton"""
+				main_screen_link.clear_screen()
+				main_screen_link.change_box_id()
+				screen_manager.transition.direction = 'left'
+				screen_manager.transition.duration = 0.5
+				screen_manager.current = 'task_screen'
+
+			create_btn = MDIconButton(
+				user_font_size="50sp",
+				text_color=[1, 1, 1, 1],
+				pos_hint={'x': 0.8, 'y': 0.03},
+				icon="plus",
+				md_bg_color=get_color_from_hex("00BFA5"),  #(colors["Teal"]["A700"]),
+				theme_text_color="Custom",
+
+				on_release=_on_release_create_btn
+			)
+			self.add_widget(create_btn)
+			
+			# До конца не понял, но всё же.
+			#* Создаём слабую ссылку на кнопку, как новое значение по ключю 'create_btn'
+			self.ids['create_btn'] = weakref.proxy(create_btn)
+
 		team_name = account.team_name
 		self.ids.toolbar.title = team_name
 
@@ -599,13 +660,14 @@ class MainScreen(Screen):
 
 	@staticmethod
 	def back_to_log():
-		print('<staticmethod> back_to_log\n')
+		print('\t<staticmethod> back_to_log\n')
 		screen_manager.transition.direction = 'down'
 		screen_manager.transition.duration = 0.5
 		screen_manager.current = 'log_in_screen'
 		
 	@staticmethod
 	def clear_screen():
+		print('\t<staticmethod> clear_screen')
 		task_screen_link.ids.text.text = ""
 		task_screen_link.ids.time_label.text = "HH.MM"
 		task_screen_link.ids.date_label.text = "DD.MM.YYYY"

@@ -195,6 +195,24 @@ def get_team_name(login: str) -> str:
 		return ''
 
 
+def get_user_role_permissions(login: str) -> dict:
+	print('\n<func> get_user_role_permissions')
+
+	try:
+		r = requests.post(
+			url=f'{server_domain}/get_user_role_permissions',
+			data=json.dumps({'login': login}),
+			headers=headers
+		)
+
+		print(f'\t"POST {server_domain}/get_user_role_permissions" {r.status_code}', "\n")
+		return json.loads(r.text)
+
+	except Exception as e:
+		print("\tОшибка получения разрешений роли\n", f"\t{e}\n")
+		return {}
+
+
 def push_task_info(task: dict) -> bool:
 	"""Отправляет задачу на сервер в таком виде:\n
 		{

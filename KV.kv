@@ -328,6 +328,17 @@
             on_release:
                 root.log_in()
 
+        MDRaisedButton:
+            text: "Капитан"
+            pos_hint: {'center_x': 0.9, 'center_y': 0.45}
+            on_release:
+                root.change_to_capitan()
+        MDRaisedButton:
+            text: "Участник"
+            pos_hint: {'center_x': 0.9, 'center_y': 0.4}
+            on_release:
+                root.change_to_participant()
+
 
 # Экран регистрации
 <RegistrationScreen>:
@@ -405,6 +416,7 @@
 <MainScreen>:
     toolbar: toolbar
     menu_list: menu_list
+    create_btn: create_btn
 
     MDFloatLayout:
         md_bg_color: 0.93, 0.93, 0.93, 1
@@ -457,9 +469,11 @@
                             root.back_to_start()
 
         MDIconButton:
+            id: create_btn
+
             # Текст
             user_font_size: "50sp"
-            text_color: 1,1,1,1
+            text_color: 1, 1, 1, 1
 
             # Позиционирование
             pos_hint: {'x': 0.8, 'y': 0.03}
@@ -737,7 +751,7 @@
             font_size: 14
 
             pos_hint: {'center_x': 0.5, 'center_y': 0.3}  # 'center_y': 0.35
-            color: 1,0,0,1
+            color: 1, 0, 0, 1
 
         MDFillRoundFlatButton:
             id: button
