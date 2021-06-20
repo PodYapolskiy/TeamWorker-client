@@ -334,8 +334,13 @@
             on_release:
                 root.change_to_capitan()
         MDRaisedButton:
-            text: "Участник"
+            text: "Менеджер"
             pos_hint: {'center_x': 0.9, 'center_y': 0.4}
+            on_release:
+                root.change_to_manager()
+        MDRaisedButton:
+            text: "Участник"
+            pos_hint: {'center_x': 0.9, 'center_y': 0.35}
             on_release:
                 root.change_to_participant()
 
@@ -552,9 +557,7 @@
             size_hint: 0.3, 0.05
 
             on_release:
-                root.manager.transition.direction = 'left'
-                root.manager.transition.duration = 0.5
-                root.manager.current = 'task_members_screen'
+                root.edit_task_members()
 
         SpecialLabel:
             id: members_label

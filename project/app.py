@@ -177,22 +177,25 @@ def get_team_users(login: str) -> dict:
 		return {}
 
 
-def get_team_name(login: str) -> str:
-	# print('\n<func> get_team_name')
+def get_team_and_user_name(login: str) -> Tuple[str, str]:
+	# print('\n<func> get_team_and_user_name')
 
 	try:
 		r = requests.post(
-			url=f'{server_domain}/get_team_name',
+			url=f'{server_domain}/get_team_and_user_name',
 			data=json.dumps({'login': login}),
 			headers=headers
 		)
 
-		# print(f'\t"POST {server_domain}/get_team_name" {r.status_code}', "\n")
-		return json.loads(r.text)['team_name']
+		# print(f'\t"POST {server_domain}/get_team_and_user_name" {r.status_code}', "\n")
+		data = json.loads(r.text)
+		assert isinstance(data, dict)
+
+		return data['team_name'], data['user_name']
 
 	except Exception as e:
 		print("\tОшибка входа\n", f"\t{e}\n")
-		return ''
+		return {}
 
 
 def get_user_role_permissions(login: str) -> dict:

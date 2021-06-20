@@ -26,14 +26,13 @@ from kivymd.uix.snackbar import BaseSnackbar
 
 # Импорт своих модулей из пакета project
 from project.app import sign, log
-from project.app import get_tasks_info, get_team_name, get_team_users, get_user_role_permissions
+from project.app import get_tasks_info, get_team_and_user_name, get_team_users, get_user_role_permissions
 from project.app import push_task_info, edit_task_info, change_task_state, remove_task
 from project.functions import generate_string, convert_month
 
 # Импорт других модулей
 import json
 import weakref
-from datetime import datetime
 from typing import Optional, Dict
 
 #// (test)
@@ -68,6 +67,16 @@ class Logger(metaclass=Singleton):
 	@login.setter
 	def login(self, value):
 		self.__login = value
+
+	__name = None
+
+	@property
+	def name(self) -> Optional[str]:
+		return self.__name
+	
+	@name.setter
+	def name(self, value):
+		self.__name = value
 
 	__team_name = None  # Название команды
 
@@ -342,10 +351,14 @@ class LogInScreen(Screen):
 			if rp_dict.keys():  # Если словарь не пустой
 				account.rp = rp_dict
 
-			if get_team_name(login) != '':
-				account.team_name = get_team_name(login)
+			team_name, user_name = get_team_and_user_name(login)
+
+			if team_name:
+				account.team_name = team_name
 			else:
 				account.team_name = "<ОШИБКА>"
+
+			account.name = user_name
 
 			self.manager.transition.direction = 'up'
 			self.manager.transition.duration = 0.5
@@ -365,6 +378,10 @@ class LogInScreen(Screen):
 	def change_to_capitan(self):
 		self.ids.login.text = "T4Z1P5J3SX"
 		self.ids.password.text = "EM9RFW22VS"
+
+	def change_to_manager(self):
+		self.ids.login.text = "K7YXU7MYXO"
+		self.ids.password.text = "AW7647W0HY"
 
 	def change_to_participant(self):
 		self.ids.login.text = "R14987VXC3"
@@ -683,7 +700,15 @@ class TaskScreen(Screen):
 
 		# Если новая задача без прикреплённых участников, её текст - "..."
 		if (task_box_id >= main_screen_link.get_tasks_length()) and (len(self._task_users_login) == 0):
-			self.ids.members_label.text = "..."
+
+			# Если есть право на изменение списка пользователей
+			if account.rp['inviting']:
+				self.ids.members_label.text = "..."
+			# Если такого права нет
+			else:
+				self.ids.members_label.text = f"{account.name}"
+				self._task_users_login.append(account.login)
+
 		elif (task_box_id >= main_screen_link.get_tasks_length()):
 			print("\tИМЕННО ЭТО")
 
@@ -846,6 +871,24 @@ class TaskScreen(Screen):
 		screen_manager.transition.direction = 'right'
 		screen_manager.transition.duration = 0.5
 		screen_manager.current = 'main_screen'
+	
+	@staticmethod
+	def edit_task_members():
+		"""Если нет права на изменение списка польхователей задачи, покажет ошибку"""
+		if account.rp['inviting']:
+			screen_manager.transition.direction = "left"
+			screen_manager.transition.duration = 0.5
+			screen_manager.current = 'task_members_screen'
+		else:
+			snackbar = CustomSnackbar(
+				text="[color=#ffffff][b]Нет права изменять участников задачи[/b][/color]",
+				icon="information",
+				bg_color="#00BFA5",
+				snackbar_x="10dp",
+				snackbar_y="10dp",
+			)
+			snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+			snackbar.open()
 
 
 class RoleEditScreen(Screen):
